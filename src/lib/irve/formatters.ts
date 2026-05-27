@@ -1,13 +1,10 @@
 import {
-  type AfirPowerCategory,
-  type AfirPowerCategoryId,
   AccessibilitePMR,
   ConditionAcces,
   EtatPDCEnum,
   EtatPriseEnum,
   ImplantationStation,
   OccupationPDCEnum,
-  type PowerCurrentType,
   type QualichargeEVSEConsolidated,
   type QualichargeEVSEPdc,
 } from "@/types/irve";
@@ -89,108 +86,6 @@ export function getPowerSeverity(power: number) {
   if (power >= 50) return "warning" as const;
   if (power >= 22) return "info" as const;
   return "success" as const;
-}
-
-export function getPdcCurrentType(pdc: QualichargeEVSEPdc): PowerCurrentType {
-  if (pdc.prise_type_combo_ccs || pdc.prise_type_chademo) {
-    return "dc";
-  }
-
-  if (pdc.prise_type_2 || pdc.prise_type_ef) {
-    return "ac";
-  }
-
-  return "unknown";
-}
-
-export function getAfirPowerCategory(power: number, currentType: PowerCurrentType): AfirPowerCategory {
-  if (currentType === "ac") {
-    if (power < 7.4) {
-      return {
-        id: "ac_slow_single_phase",
-        currentType,
-        label: "Recharge lente AC monophasée",
-        shortLabel: "AC < 7,4 kW",
-      };
-    }
-
-    if (power <= 22) {
-      return {
-        id: "ac_medium_three_phase",
-        currentType,
-        label: "Recharge AC moyenne vitesse triphasée",
-        shortLabel: "AC 7,4-22 kW",
-      };
-    }
-
-    return {
-      id: "ac_fast_three_phase",
-      currentType,
-      label: "Recharge rapide AC triphasée",
-      shortLabel: "AC > 22 kW",
-    };
-  }
-
-  if (currentType === "dc") {
-    if (power < 50) {
-      return {
-        id: "dc_slow",
-        currentType,
-        label: "Recharge lente DC",
-        shortLabel: "DC < 50 kW",
-      };
-    }
-
-    if (power < 150) {
-      return {
-        id: "dc_fast",
-        currentType,
-        label: "Recharge rapide DC",
-        shortLabel: "DC 50-149 kW",
-      };
-    }
-
-    if (power < 350) {
-      return {
-        id: "dc_ultra_fast_level_1",
-        currentType,
-        label: "Recharge ultra-rapide DC niveau 1",
-        shortLabel: "DC 150-349 kW",
-      };
-    }
-
-    return {
-      id: "dc_ultra_fast_level_2",
-      currentType,
-      label: "Recharge ultra-rapide DC niveau 2",
-      shortLabel: "DC >= 350 kW",
-    };
-  }
-
-  return {
-    id: "unknown",
-    currentType,
-    label: "Puissance non classée",
-    shortLabel: `${power} kW`,
-  };
-}
-
-export function getAfirPowerCategorySeverity(categoryId: AfirPowerCategoryId) {
-  switch (categoryId) {
-    case "ac_slow_single_phase":
-    case "dc_slow":
-      return "success" as const;
-    case "ac_medium_three_phase":
-    case "dc_fast":
-      return "info" as const;
-    case "ac_fast_three_phase":
-    case "dc_ultra_fast_level_1":
-      return "warning" as const;
-    case "dc_ultra_fast_level_2":
-      return "error" as const;
-    default:
-      return "new" as const;
-  }
 }
 
 export function getAccessSeverity(condition: ConditionAcces) {

@@ -4,14 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:worker": "node scripts/build-worker.mjs",
-    "build": "npm run build:worker && next build",
-    "build:pages": "GITHUB_PAGES=true npm run build",
-    "start": "npx serve@latest out -l 3000",
+    "build": "next build",
+    "start": "next start -p ${PORT:-3000}",
     "predev": "react-dsfr update-icons",
     "prebuild": "react-dsfr update-icons",
     "lint": "eslint",
-    "typecheck": "tsc -p tsconfig.json && tsc -p src/workers/tsconfig.json --noEmit"
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json"
   },
   "dependencies": {
     "@codegouvfr/react-dsfr": "^1.32.0",
@@ -35,11 +34,11 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@types/supercluster": "^7.1.3",
-    "esbuild": "^0.27.5",
     "eslint": "^9",
     "eslint-config-next": "16.2.2",
     "sass": "^1.98.0",
     "tailwindcss": "^4",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.6"
   }
 }

@@ -1,111 +1,68 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { withBasePath } from "@/lib/base-path";
-import type { IRVEPointFeature, LoadState, WorkerMessage } from "@/types/irve-runtime";
+import type { IRVEMapStation, IRVEPointsPayload, LoadState } from "@/types/irve-runtime";
 
 export interface UseIRVEDataResult {
-  points: IRVEPointFeature[];
+  stations: IRVEMapStation[];
   loadState: LoadState;
 }
 
-const PROGRESS_UPDATE_INTERVAL_MS = 200;
-
-function clonePoints(source: IRVEPointFeature[]) {
-  const copy = new Array<IRVEPointFeature>(source.length);
-  for (let i = 0; i < source.length; i += 1) {
-    copy[i] = source[i];
-  }
-  return copy;
-}
-
 export function useIRVEData(): UseIRVEDataResult {
-  const [points, setPoints] = useState<IRVEPointFeature[]>([]);
+  const [stations, setStations] = useState<IRVEMapStation[]>([]);
   const [loadState, setLoadState] = useState<LoadState>({
     status: "loading",
     loaded: 0,
     total: 0,
-    message: "Fetching Parquet...",
+    message: "Chargement des donnees consolidees...",
   });
-
-  const workerRef = useRef<Worker | null>(null);
-  const pointsRef = useRef<IRVEPointFeature[]>([]);
-  const lastProgressUpdateRef = useRef(0);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const worker = new Worker(withBasePath("/worker/dataset-parser.worker.js"));
-    workerRef.current = worker;
+    const controller = new AbortController();
 
-    worker.onmessage = (event: MessageEvent<WorkerMessage>) => {
-      const message = event.data;
+    async function loadPoints() {
+      try {
+        const response = await fetch(withBasePath("/api/irve/points/"), {
+          cache: "no-store",
+          signal: controller.signal,
+        });
 
-      if (message.type === "loading") {
-        setLoadState((prev) => ({
-          ...prev,
-          status: "loading",
-          message: message.message,
-        }));
-        return;
-      }
-
-      if (message.type === "chunk") {
-        const nextPoints = pointsRef.current;
-        for (let i = 0; i < message.points.length; i += 1) {
-          nextPoints.push(message.points[i]);
+        if (!response.ok) {
+          const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+          throw new Error(payload?.error || `Erreur HTTP ${response.status}`);
         }
 
-        const now = Date.now();
-        if (now - lastProgressUpdateRef.current >= PROGRESS_UPDATE_INTERVAL_MS) {
-          lastProgressUpdateRef.current = now;
-            setLoadState((prev) => ({
-              ...prev,
-              status: "loading",
-              loaded: message.total,
-              total: message.total,
-              message: "Parsing Parquet...",
-            }));
-          }
+        const payload = (await response.json()) as IRVEPointsPayload;
 
-        return;
-      }
-
-      if (message.type === "done") {
-        setPoints(clonePoints(pointsRef.current));
+        setStations(payload.stations);
         setLoadState({
           status: "done",
-          loaded: message.total,
-          total: message.total,
+          loaded: payload.total,
+          total: payload.total,
         });
-        return;
-      }
+      } catch (error) {
+        if (controller.signal.aborted) {
+          return;
+        }
 
-      if (message.type === "error") {
         setLoadState((prev) => ({
           ...prev,
           status: "error",
-          error: message.message,
+          error: error instanceof Error ? error.message : "Une erreur est survenue pendant le chargement des bornes.",
         }));
       }
-    };
+    }
 
-    worker.onerror = (event) => {
-      setLoadState((prev) => ({
-        ...prev,
-        status: "error",
-        error: event.message,
-      }));
-    };
+    void loadPoints();
 
     return () => {
-      worker.terminate();
-      workerRef.current = null;
-      pointsRef.current = [];
-      lastProgressUpdateRef.current = 0;
+      controller.abort();
     };
   }, []);
 
-  return { points, loadState };
+  return { stations, loadState };
 }

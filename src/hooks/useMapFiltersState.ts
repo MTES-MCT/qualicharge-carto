@@ -70,25 +70,6 @@ export function useMapFiltersState() {
     }));
   }, []);
 
-  const togglePayment = useCallback((value: MapFiltersState["payment"][number]) => {
-    setFilters((current) => ({
-      ...current,
-      payment: toggleListValue(current.payment, value),
-    }));
-  }, []);
-
-  const toggleReservation = useCallback(() => {
-    setFilters((current) => ({ ...current, reservationOnly: !current.reservationOnly }));
-  }, []);
-
-  const togglePmr = useCallback(() => {
-    setFilters((current) => ({ ...current, pmrOnly: !current.pmrOnly }));
-  }, []);
-
-  const toggleTwoWheels = useCallback(() => {
-    setFilters((current) => ({ ...current, twoWheelsOnly: !current.twoWheelsOnly }));
-  }, []);
-
   const activeFilterCount = useMemo(() => getActiveFilterCount(filters), [filters]);
 
   return {
@@ -102,9 +83,5 @@ export function useMapFiltersState() {
     setAccess,
     togglePower,
     toggleConnector,
-    togglePayment,
-    toggleReservation,
-    togglePmr,
-    toggleTwoWheels,
   };
 }

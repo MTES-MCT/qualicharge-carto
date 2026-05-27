@@ -159,8 +159,52 @@ export interface QualichargeEVSEDynamic {
   etat_prise_type_ef?: EtatPriseEnum | null;
 }
 
+export interface QualichargeTariffPriceComponent {
+  type?: string | null;
+  price?: number | null;
+  vat?: number | null;
+  step_size?: number | null;
+}
+
+export interface QualichargeTariffElement {
+  restrictions?: Record<string, unknown> | null;
+  price_components?: QualichargeTariffPriceComponent[];
+}
+
+export interface QualichargeTariffAltText {
+  text?: string | null;
+  language?: string | null;
+}
+
+export interface QualichargeTariffRaw {
+  country_code?: string | null;
+  party_id?: string | null;
+  id?: string | null;
+  currency?: string | null;
+  elements?: QualichargeTariffElement[];
+  tariff_alt_text?: QualichargeTariffAltText[];
+  tax_included?: string | null;
+  min_price?: unknown;
+  max_price?: unknown;
+  start_date_time?: string | null;
+  end_date_time?: string | null;
+  last_updated?: string | null;
+}
+
+export interface QualichargeTariff {
+  id: string;
+  original_id?: string | null;
+  original_last_updated?: string | null;
+  raw: string;
+  parsed: QualichargeTariffRaw | null;
+  start?: string | null;
+  end?: string | null;
+  id_pdc_itinerance: string[];
+}
+
 export type QualichargeEVSEPdc = QualichargeEVSEStatique & {
   dynamic?: QualichargeEVSEDynamic;
+  applicable_tariff?: QualichargeTariff;
 };
 
 export interface QualichargeEVSEStationSummary {
@@ -172,27 +216,12 @@ export interface QualichargeEVSEStationSummary {
   has_prise_type_chademo: boolean;
   has_prise_type_autre: boolean;
   price_per_kwh: number | null;
+  pricing_value: number | null;
+  pricing_dimension: string | null;
+  pricing_unit: string | null;
   pricing_status: string | null;
   pricing_headline: string | null;
-}
-
-export type PowerCurrentType = "ac" | "dc" | "unknown";
-
-export type AfirPowerCategoryId =
-  | "ac_slow_single_phase"
-  | "ac_medium_three_phase"
-  | "ac_fast_three_phase"
-  | "dc_slow"
-  | "dc_fast"
-  | "dc_ultra_fast_level_1"
-  | "dc_ultra_fast_level_2"
-  | "unknown";
-
-export interface AfirPowerCategory {
-  id: AfirPowerCategoryId;
-  currentType: PowerCurrentType;
-  label: string;
-  shortLabel: string;
+  applicable_tariff_count: number;
 }
 
 export interface QualichargeEVSEConsolidated extends QualichargeEVSEStationBase {

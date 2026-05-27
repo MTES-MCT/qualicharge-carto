@@ -1,141 +1,151 @@
+import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Card } from "@codegouvfr/react-dsfr/Card";
 import { Notice } from "@codegouvfr/react-dsfr/Notice";
-import { Tag } from "@codegouvfr/react-dsfr/Tag";
 
 import {
-  getPricingFacts,
-  getPricingHeadline,
-  getPricingStatusLabel,
-  getStationPricing,
-  hasStructuredPricing,
-} from "@/lib/irve/pricing";
+  getBestStationTariff,
+  getTariffComponentLabel,
+  getTariffDimensionGroups,
+  getTariffSummary,
+} from "@/lib/irve/tariffs";
 import type { StationDetailsTabProps } from "./shared";
+import {
+  getHighlightedTariffTextParts,
+  getTaxIncludedLabel,
+  getTariffDisplayId,
+  getTariffLineViewModel,
+  getTariffValidityText,
+  getTariffVersionDate,
+  getUniqueApplicableTariffEntries,
+  sortTariffEntries,
+} from "./pricing/tariffText";
 
-function renderAmount(value: number | undefined, suffix: string) {
-  if (typeof value !== "number") {
-    return null;
-  }
-
-  return `${value.toLocaleString("fr-FR", { minimumFractionDigits: value % 1 === 0 ? 0 : 2, maximumFractionDigits: 4 })} €${suffix}`;
+function renderHighlightedText(text: string) {
+  return getHighlightedTariffTextParts(text).map((part, partIndex) =>
+    part.kind === "text" ? (
+      part.value
+    ) : (
+      <strong key={`${part.value}-${partIndex}`}>{part.value}</strong>
+    )
+  );
 }
 
-function getPlanTags(plan: {
-  pricePerKwh?: number;
-  startFee?: number;
-  chargeFeePerHour?: number;
-  idleFeePerHour?: number;
-}) {
-  return [
-    typeof plan.pricePerKwh === "number" ? { label: renderAmount(plan.pricePerKwh, "/kWh") ?? "", iconId: "fr-icon-flashlight-line" as const } : null,
-    typeof plan.startFee === "number" ? { label: renderAmount(plan.startFee, "/session") ?? "", iconId: "fr-icon-play-circle-line" as const } : null,
-    typeof plan.chargeFeePerHour === "number" ? { label: renderAmount(plan.chargeFeePerHour, "/h charge") ?? "", iconId: "fr-icon-time-line" as const } : null,
-    typeof plan.idleFeePerHour === "number" ? { label: renderAmount(plan.idleFeePerHour, "/h occupation") ?? "", iconId: "fr-icon-car-line" as const } : null,
-  ].filter((tag): tag is { label: string; iconId: "fr-icon-flashlight-line" | "fr-icon-play-circle-line" | "fr-icon-time-line" | "fr-icon-car-line" } => tag !== null);
+function renderTariffLine(line: ReturnType<typeof getTariffDimensionGroups>[number]["lines"][number], hasSeveralLines: boolean) {
+  const viewModel = getTariffLineViewModel(line, hasSeveralLines);
+
+  return (
+    <>
+      <strong>{viewModel.amount}</strong>
+      {viewModel.restrictions.length > 0 ? " " : null}
+      {viewModel.restrictions.map((restriction, index) => (
+        <span key={`${restriction}-${index}`}>
+          {index > 0 ? " et " : null}
+          {renderHighlightedText(restriction)}
+        </span>
+      ))}
+    </>
+  );
 }
 
 export function StationPricingTab({ station }: StationDetailsTabProps) {
-  const pricing = getStationPricing(station);
-  const facts = getPricingFacts(pricing);
-  const hasStructuredData = hasStructuredPricing(pricing);
+  const consultationDate = new Date();
+  const applicableTariffs = getUniqueApplicableTariffEntries(station);
+  const bestTariff = getBestStationTariff(applicableTariffs.map((entry) => entry.tariff), consultationDate);
+  const bestSummary = getTariffSummary(bestTariff, consultationDate);
+  const bestDimensionLabel = getTariffComponentLabel(bestSummary.dimension);
+  const sortedTariffs = sortTariffEntries(applicableTariffs, bestTariff);
+
   return (
     <div className="irve-sidepanel__tab-stack">
-      <Card
-        title="Tarification"
-        desc={
-          <div className="grid gap-4 text-sm">
+      {sortedTariffs.length === 0 ? (
+        <Notice
+          severity="info"
+          title="Aucun tarif applicable"
+          description="Aucun tarif courant n’est associé aux points de charge de cette station."
+        />
+      ) : null}
 
-            {facts.length > 0 ? (
-              <dl className="irve-sidepanel__facts">
-                {facts.map((fact) => (
-                  <div key={fact.label} className="irve-sidepanel__fact-row">
-                    <div>
-                      <dt>{fact.label}</dt>
-                    </div>
-                    <dd>{fact.value}</dd>
+      {sortedTariffs.map(({ tariff }) => {
+        const validityText = getTariffValidityText(tariff);
+        const dimensionGroups = getTariffDimensionGroups(tariff);
+
+        return (
+          <Card
+            key={tariff.id}
+            title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
+            desc={
+              <div className="irve-tariff-reader">
+                {/* {tariff.parsed?.currency || getTaxIncludedLabel(tariff.parsed?.tax_included) ? (
+                  <p className="irve-tariff-reader__meta">
+                    {[
+                      tariff.parsed?.currency,
+                      getTaxIncludedLabel(tariff.parsed?.tax_included),
+                    ].filter(Boolean).join(" · ")}
+                  </p>
+                ) : null} */}
+                {validityText ? (
+                  <p className="irve-tariff-reader__validity">{renderHighlightedText(validityText)}</p>
+                ) : null}
+                {tariff.id === bestTariff?.id ? (
+                  <div>
+                    <Badge severity="success">Applicable à cette date</Badge>
                   </div>
-                ))}
-              </dl>
-            ) : null}
+                ) : null}
 
-            {pricing.status === "URL_ONLY" && pricing.url ? (
-              <Notice
-                severity="info"
-                title="Tarification externe"
-                description="Le détail des tarifs est disponible sur le site de l'opérateur."
-                link={{
-                  text: "Consulter la tarification",
-                  linkProps: {
-                    href: pricing.url,
-                    target: "_blank",
-                    rel: "noreferrer",
-                  },
-                }}
-              />
-            ) : null}
+                {dimensionGroups.length > 0 ? (
+                  <div className="fr-accordions-group irve-tariff-reader__accordions">
+                    {tariff.id === bestTariff?.id ? (
+                      <Accordion
+                        label="tarif actuellement applicable"
+                        defaultExpanded
+                        classes={{
+                          root: "irve-tariff-reader__accordion",
+                          title: "irve-tariff-reader__accordion-title",
+                        }}
+                      >
+                        <dl className="irve-sidepanel__facts irve-tariff-reader__current">
+                          <div className="irve-sidepanel__fact-row">
+                            <div>
+                              <dt>Composante carte</dt>
+                          </div>
+                          <dd>
+                            {bestSummary.headline ?? "Tarif disponible"}
+                            {bestSummary.dimension ? <span className="irve-sidepanel__fact-hint">{bestDimensionLabel}</span> : null}
+                          </dd>
+                        </div>
+                      </dl>
+                    </Accordion>
+                  ) : null}
 
-            {!hasStructuredData && pricing.status !== "URL_ONLY" ? (
-              <Notice
-                severity="info"
-                title="Tarification non exploitable"
-                description="L’opérateur de cette station ne nous a pas communiqué le tarif."
-              />
-            ) : null}
-
-            {pricing.originalText ? (
-              <div className="border-t border-slate-200 pt-2">
-                <p className="irve-sidepanel__label">Source brute</p>
-                <p className="irve-sidepanel__value">{pricing.originalText}</p>
+                    {dimensionGroups.map((group) => (
+                      <Accordion
+                        key={`${tariff.id}-${group.type}`}
+                        label={group.label.toLocaleLowerCase("fr-FR")}
+                        classes={{
+                          root: "irve-tariff-reader__accordion",
+                          title: "irve-tariff-reader__accordion-title",
+                      }}
+                    >
+                      <div className="irve-tariff-reader__lines">
+                        {group.lines.map((line, lineIndex) => (
+                          <p key={`${tariff.id}-${group.type}-${lineIndex}`} className="irve-tariff-reader__line">
+                            {renderTariffLine(line, group.lines.length > 1)}
+                            </p>
+                          ))}
+                        </div>
+                      </Accordion>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="irve-sidepanel__missing">Aucune composante tarifaire exploitable.</p>
+                )}
               </div>
-            ) : null}
-          </div>
-        }
-        border
-      />
-
-      {pricing.timeTiers?.length ? (
-        <Card
-          title="Tranches horaires"
-          desc={
-            <div className="grid gap-3 text-sm">
-              {pricing.timeTiers.map((tier) => (
-                <div key={`${tier.startTime}-${tier.endTime}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="m-0 text-[0.95rem] font-bold text-slate-900">{tier.startTime} - {tier.endTime}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {getPlanTags(tier).map((tag) => <Tag key={`${tier.startTime}-${tier.endTime}-${tag.label}`} small iconId={tag.iconId}>{tag.label}</Tag>)}
-                  </div>
-                  {typeof tier.pricePerKwh !== "number" && typeof tier.chargeFeePerHour !== "number" && typeof tier.idleFeePerHour !== "number" ? (
-                    <Notice severity="info" title="Aucun détail détecté" description="Aucun tarif détaillé détecté sur cette tranche." />
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          }
-          border
-        />
-      ) : null}
-
-      {pricing.alternativePlans?.length ? (
-        <Card
-          title="Plans alternatifs"
-          desc={
-            <div className="grid gap-3 text-sm">
-              {pricing.alternativePlans.map((plan, index) => (
-                <div key={`plan-${index + 1}`} className="grid gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                  <p className="m-0 text-[0.95rem] font-bold text-slate-900">Plan {index + 1}</p>
-                  <div className="flex flex-wrap gap-2">
-                    {getPlanTags(plan).map((tag) => <Tag key={`plan-${index + 1}-${tag.label}`} small iconId={tag.iconId}>{tag.label}</Tag>)}
-                  </div>
-                  {typeof plan.pricePerKwh !== "number" && typeof plan.startFee !== "number" && typeof plan.chargeFeePerHour !== "number" && typeof plan.idleFeePerHour !== "number" ? (
-                    <Notice severity="info" title="Aucun détail détecté" description="Aucun détail exploitable détecté pour ce plan." />
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          }
-          border
-        />
-      ) : null}
+            }
+            border
+          />
+        );
+      })}
     </div>
   );
 }

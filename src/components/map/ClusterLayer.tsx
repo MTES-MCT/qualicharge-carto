@@ -6,12 +6,9 @@ import { Marker, useMap } from "react-leaflet";
 import L from "leaflet";
 import type SuperclusterType from "supercluster";
 
-import type { IRVEClusterOrPoint, IRVEPointProperties } from "@/types/irve-runtime";
-import type { QualichargeEVSEConsolidated } from "@/types/irve";
+import type { IRVEClusterOrPoint, IRVEMapStation, IRVEPointProperties } from "@/types/irve-runtime";
 import { isClusterFeature } from "@/hooks/useMapClusters";
-import { getStationDynamicSummary } from "@/lib/irve/formatters";
 import type { MarkerDisplayMode } from "@/lib/irve/mapModes";
-import { getPricingMarkerContent, getStationPricing } from "@/lib/irve/pricing";
 
 const clusterIconCache = new Map<number, L.DivIcon>();
 const pointIconCache = new Map<string, DivIcon>();
@@ -23,7 +20,7 @@ interface MarkerVisualContent {
   secondaryTextColor?: string | null;
 }
 
-type MarkerContentBuilder = (station: QualichargeEVSEConsolidated) => MarkerVisualContent;
+type MarkerContentBuilder = (station: IRVEMapStation) => MarkerVisualContent;
 
 function getClusterIcon(count: number): L.DivIcon {
   const size = count < 10 ? 36 : count < 100 ? 44 : count < 1000 ? 52 : 62;
@@ -81,29 +78,61 @@ function getPowerTone(power: number | null | undefined): PowerTone {
   if (power >= 7.4) return { bg: "#c9fcac", text: "#447049" }; // 950 on sun-425
   return { bg: "#e6feda", text: "#447049" };                   // 975 on sun-425
 }
+
+function getPricingTone(dimension: string | null | undefined): PowerTone {
+  switch (dimension) {
+    case "ENERGY":
+      return { bg: "#18753c", text: "#ffffff" };
+    case "TIME":
+      return { bg: "#a55800", text: "#ffffff" };
+    case "FLAT":
+      return { bg: "#6e445a", text: "#ffffff" };
+    default:
+      return { bg: "#64748b", text: "#ffffff" };
+  }
+}
+
+function getPricingTypeLabel(dimension: string | null | undefined) {
+  switch (dimension) {
+    case "ENERGY":
+      return "/kWh";
+    case "TIME":
+      return "/h";
+    case "FLAT":
+      return "forfait";
+    default:
+      return "N/C";
+  }
+}
+
+function getCompactPricingHeadline(headline: string | null | undefined) {
+  return headline?.replace(/(€)\s*\/\s*(?:kwh|h)$/i, "$1") ?? null;
+}
+
 const markerContentBuilders: Record<MarkerDisplayMode, MarkerContentBuilder> = {
   markers: (station) => {
-    const dynamicSummary = getStationDynamicSummary(station);
-
     const tone = getPowerTone(station.summary.max_power);
 
     return {
       primaryLabel: getPointPowerLabel(station.summary.max_power),
-      secondaryLabel: getPointPlugsLabel(dynamicSummary.availableCount, station.pdcs.length),
+      secondaryLabel: getPointPlugsLabel(station.dynamic_summary.available_count, station.pdc_count),
       toneColor: tone.bg,
       primaryTextColor: tone.text,
       secondaryTextColor: "#334155",
     };
   },
   pricing: (station) => {
-    const pricing = getStationPricing(station);
-    const pricingMarker = getPricingMarkerContent(pricing);
+    const tone = getPricingTone(station.summary.pricing_dimension);
+    const topLabel =
+      station.summary.pricing_status === "FREE"
+        ? "Gratuit"
+        : getCompactPricingHeadline(station.summary.pricing_headline) ?? "Tarif ?";
 
     return {
-      primaryLabel: pricingMarker.topLabel,
-      secondaryLabel: pricingMarker.bottomLabel,
-      toneColor: pricingMarker.toneColor,
-      primaryTextColor: "#ffffff",
+      primaryLabel: topLabel,
+      secondaryLabel: getPricingTypeLabel(station.summary.pricing_dimension),
+      toneColor: tone.bg,
+      primaryTextColor: tone.text,
       secondaryTextColor: "#334155",
     };
   },
@@ -156,7 +185,6 @@ function getPointIcon(
 interface ClusterLayerProps {
   clusters: IRVEClusterOrPoint[];
   supercluster: SuperclusterType<IRVEPointProperties, Record<string, never>>;
-  zoom: number;
   displayMode?: MarkerDisplayMode;
   selectedStationId?: string | null;
   onStationSelect?: (station: IRVEPointProperties["row"]) => void;
@@ -165,7 +193,6 @@ interface ClusterLayerProps {
 export function ClusterLayer({
   clusters,
   supercluster,
-  zoom,
   displayMode = "markers",
   selectedStationId,
   onStationSelect,
@@ -209,7 +236,7 @@ export function ClusterLayer({
       }
 
       const p = feature.properties.row;
-      const isSelected = p.id_station_itinerance === selectedStationId;
+      const isSelected = p.station_key === selectedStationId;
       const markerContent = getMarkerContent(p);
 
       return (
@@ -223,7 +250,6 @@ export function ClusterLayer({
             isSelected,
             markerContent.primaryTextColor,
             markerContent.secondaryTextColor,
-            // `${getPointPlugsLabel(dynamicSummary.availableCount, p.pdcs.length)} | ${p.id_station_itinerance}`
           )}
           zIndexOffset={isSelected ? 2000 : 0}
           eventHandlers={{

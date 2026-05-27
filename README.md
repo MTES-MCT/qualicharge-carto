@@ -1,4 +1,4 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Qualicharge dataviz is a Next.js application for exploring consolidated IRVE charging-station data on a map.
 
 ## Getting Started
 
@@ -16,21 +16,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The map data is served by the Next.js API route at `/api/irve/points`. The first request warms an in-memory server cache by fetching and consolidating the static and dynamic Parquet sources; later requests reuse that cached payload while the backend refreshes it periodically. This endpoint returns compact map features only, and full station details are loaded on demand through `/api/irve/stations/[stationKey]`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Data Environment
 
-## Learn More
+The backend accepts these optional environment variables:
 
-To learn more about Next.js, take a look at the following resources:
+- `STATIC_PARQUET_URL`: overrides the default static IRVE Parquet URL.
+- `DYNAMIC_PARQUET_URL`: overrides the default dynamic IRVE Parquet URL.
+- `TARIFFS_PARQUET_URL`: overrides the default tariff Parquet URL. Defaults to `http://localhost:8020/d/tariffs.parquet`.
+- `PARQUET_REFRESH_INTERVAL_SECONDS`: cache refresh interval in seconds. Defaults to `300`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Production
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Build and start the server with:
 
-## Deploy on Vercel
+```bash
+npm run build
+npm run start
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+This app now requires a Node.js Next server for the API route and cache; it is not a static export.

@@ -4,10 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
-import { Notice } from "@codegouvfr/react-dsfr/Notice";
 
 import {
-  getAfirPowerCategorySeverity,
   getConnectorStateSeverity,
   getEtatPriseLabel,
   getOccupationLabel,
@@ -19,9 +17,6 @@ function ConnectorAccordion({
   label,
   iconPath,
   maxPower,
-  powerCategoryLabel,
-  powerCategoryShortLabel,
-  powerCategoryId,
   availableCount,
   totalCount,
   pdcs,
@@ -68,12 +63,7 @@ function ConnectorAccordion({
             </div>
             <div className="min-w-0">
               <p className="mb-1 text-sm text-(--text-mention-grey)">{label}</p>
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="mb-0 text-lg font-bold text-(--text-title-grey)">{maxPower} kW max</p>
-                {/* <Badge severity={getAfirPowerCategorySeverity(powerCategoryId)} small>
-                  {powerCategoryShortLabel}
-                </Badge> */}
-              </div>
+              <p className="mb-0 text-lg font-bold text-(--text-title-grey)">{maxPower} kW max</p>
             </div>
           </div>
 
@@ -96,21 +86,6 @@ function ConnectorAccordion({
         style={{ maxHeight: expanded ? `${contentHeight}px` : "0px" }}
       >
         <div ref={contentRef} className="space-y-4 pb-4">
-          {/* <p className="mb-0 text-sm text-(--text-mention-grey)">{powerCategoryLabel}</p> */}
-          {/* <Notice
-            description={powerCategoryLabel}
-            link={{
-              linkProps: {
-                href: 'https://eur-lex.europa.eu/FR/legal-content/summary/deployment-of-alternative-fuels-infrastructure.html',
-                target: '_blank'
-              },
-              text: 'En savoir plus'
-            }}
-            severity="info"
-            title="Règlementation AFIR -"
-          /> */}
-
-
           <div className="space-y-2">
             {pdcs.map((pdc, index) => (
               <div

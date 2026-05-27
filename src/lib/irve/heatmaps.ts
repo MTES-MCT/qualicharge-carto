@@ -1,5 +1,4 @@
-import { getStationDynamicSummary, isFunctionalPdc } from "@/lib/irve/formatters";
-import { EtatPDCEnum, type QualichargeEVSEConsolidated } from "@/types/irve";
+import type { IRVEMapStation } from "@/types/irve-runtime";
 
 export interface HeatmapGradientStop {
   value: number;
@@ -46,7 +45,7 @@ export interface HeatmapDefinition {
 }
 
 export interface HeatmapDefinitionWithMetric extends HeatmapDefinition {
-  getIntensity: (station: QualichargeEVSEConsolidated) => number | null;
+  getIntensity: (station: IRVEMapStation) => number | null;
   getStops: (maxIntensity: number) => HeatmapGradientStop[];
 }
 
@@ -57,22 +56,6 @@ export const DEFAULT_HEATMAP_GRADIENT = {
   0.8: "#f59e0b",
   1: "#dc2626",
 } as const;
-
-export function parseStationCoordinates(station: QualichargeEVSEConsolidated) {
-  try {
-    const [lngRaw, latRaw] = JSON.parse(station.coordonneesXY) as [string | number, string | number];
-    const lat = Number(latRaw);
-    const lng = Number(lngRaw);
-
-    if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
-      return null;
-    }
-
-    return { lat, lng };
-  } catch {
-    return null;
-  }
-}
 
 export function buildCountStops(
   maxIntensity: number,
@@ -185,7 +168,7 @@ export const SERVICE_HEATMAPS: HeatmapDefinitionWithMetric[] = [
     radius: 40,
     blur: 12,
     normalizedWeightExponent: 0.4,
-    getIntensity: (station) => (station.pdcs.length > 0 ? station.pdcs.length : null),
+    getIntensity: (station) => (station.pdc_count > 0 ? station.pdc_count : null),
     getStops: () => buildQualitativeStops(),
   },
 ];
@@ -199,7 +182,7 @@ export function getHeatmapDefinition(mode: HeatmapMode) {
 }
 
 export function buildHeatmapConfig(
-  stations: QualichargeEVSEConsolidated[],
+  stations: IRVEMapStation[],
   activeHeatmap: HeatmapDefinitionWithMetric | null
 ): HeatmapConfig {
   if (!activeHeatmap) {
@@ -211,17 +194,12 @@ export function buildHeatmapConfig(
   }
 
   const entries = stations.flatMap((station) => {
-    const coordinates = parseStationCoordinates(station);
-    if (!coordinates) {
-      return [];
-    }
-
     const intensity = activeHeatmap.getIntensity(station);
     if (intensity == null || intensity <= 0) {
       return [];
     }
 
-    return [{ ...coordinates, intensity }];
+    return [{ lat: station.lat, lng: station.lng, intensity }];
   });
 
   const maxIntensity = entries.reduce((max, entry) => Math.max(max, entry.intensity), 0);

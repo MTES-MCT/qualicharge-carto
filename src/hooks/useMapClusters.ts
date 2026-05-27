@@ -9,7 +9,7 @@ import type { Map as LeafletMap } from "leaflet";
 import type {
   IRVEClusterFeature,
   IRVEClusterOrPoint,
-  IRVEPointFeature,
+  IRVEMapStation,
   IRVEPointProperties,
 } from "@/types/irve-runtime";
 
@@ -21,16 +21,23 @@ function areBoundsEqual(a: BBox, b: BBox) {
   return a[0] === b[0] && a[1] === b[1] && a[2] === b[2] && a[3] === b[3];
 }
 
-function toClusterPoint(point: IRVEPointFeature): ClusterPoint {
+function toClusterPoint(station: IRVEMapStation): ClusterPoint {
   return {
     type: "Feature",
-    id: point.id,
-    properties: point.properties,
-    geometry: point.geometry,
+    id: station.id,
+    properties: {
+      cluster: false,
+      id: station.id,
+      row: station,
+    },
+    geometry: {
+      type: "Point",
+      coordinates: [station.lng, station.lat],
+    },
   };
 }
 
-export function useMapClusters(points: IRVEPointFeature[]) {
+export function useMapClusters(stations: IRVEMapStation[]) {
   const mapRef = useRef<LeafletMap | null>(null);
   const [bounds, setBounds] = useState<BBox>(DEFAULT_BOUNDS);
   const [zoom, setZoom] = useState(6);
@@ -42,14 +49,14 @@ export function useMapClusters(points: IRVEPointFeature[]) {
       minPoints: 1,
     });
 
-    const features = new Array<ClusterPoint>(points.length);
-    for (let i = 0; i < points.length; i += 1) {
-      features[i] = toClusterPoint(points[i]);
+    const features = new Array<ClusterPoint>(stations.length);
+    for (let i = 0; i < stations.length; i += 1) {
+      features[i] = toClusterPoint(stations[i]);
     }
 
     supercluster.load(features);
     return supercluster;
-  }, [points]);
+  }, [stations]);
 
   const clusters = useMemo<IRVEClusterOrPoint[]>(() => {
     return index.getClusters(bounds, zoom) as IRVEClusterOrPoint[];

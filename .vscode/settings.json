@@ -1,9 +1,9 @@
 {
   "window.autoDetectColorScheme": true,
-  "workbench.colorTheme": "Default Light+",
-  "workbench.preferredDarkColorTheme": "Default Dark+",
+  "workbench.colorTheme": "Light+",
+  "workbench.preferredDarkColorTheme": "Dark+",
   "jupyter.jupyterCommandLineArguments": [
     "--notebook-dir='/home/erwan/Desktop/clients/MinistereTransitionEcologique/qualicharge-dataviz/'"
   ],
-  "workbench.preferredLightColorTheme": "Default Light+"
+  "workbench.preferredLightColorTheme": "Light+"
 }

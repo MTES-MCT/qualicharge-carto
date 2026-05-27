@@ -1,30 +1,23 @@
-import { AccessibilitePMR, ConditionAcces, type QualichargeEVSEConsolidated } from "@/types/irve";
+import { ConditionAcces } from "@/types/irve";
+import type { IRVEMapStation } from "@/types/irve-runtime";
 
-export type PowerFilterId = "ultraLevel2" | "ultraLevel1" | "veryFast" | "fast" | "standard";
+export type PowerFilterId = "ultraLevel2" | "ultraLevel1" | "veryFast";
 export type AccessFilter = "all" | "free" | "restricted";
 
 export interface MapFiltersState {
   access: AccessFilter;
   power: PowerFilterId[];
   connectors: Array<"type2" | "ccs" | "chademo" | "ef">;
-  payment: Array<"free" | "card" | "onSite">;
   itineranceQuery: string;
   selectedOperators: string[];
-  reservationOnly: boolean;
-  pmrOnly: boolean;
-  twoWheelsOnly: boolean;
 }
 
 export const DEFAULT_MAP_FILTERS: MapFiltersState = {
   access: "all",
   power: [],
   connectors: [],
-  payment: [],
   itineranceQuery: "",
   selectedOperators: [],
-  reservationOnly: false,
-  pmrOnly: false,
-  twoWheelsOnly: false,
 };
 
 function normalizeText(value: string | null | undefined) {
@@ -53,9 +46,6 @@ export const POWER_FILTER_OPTIONS: Array<{
   { id: "ultraLevel2", label: "Ultra-rapide niveau 2", description: "AFIR DC >= 350 kW" },
   { id: "ultraLevel1", label: "Ultra-rapide niveau 1", description: "AFIR DC 150 a 349 kW" },
   { id: "veryFast", label: "Rapide DC", description: "AFIR DC rapide - 50 a 149 kW" },
-  // Temporairement masqué: on n'affiche pas encore ces catégories ni sur la carte ni dans les filtres.
-  // { id: "fast", label: "AC elevee / DC lente", description: "AFIR AC > 22 kW ou DC < 50 kW" },
-  // { id: "standard", label: "AC normale", description: "AFIR AC jusqu'a 22 kW" },
 ];
 
 export const CONNECTOR_FILTER_OPTIONS: Array<{
@@ -68,15 +58,6 @@ export const CONNECTOR_FILTER_OPTIONS: Array<{
   { id: "ef", label: "Prise EF" },
 ];
 
-export const PAYMENT_FILTER_OPTIONS: Array<{
-  id: MapFiltersState["payment"][number];
-  label: string;
-}> = [
-  { id: "free", label: "Recharge gratuite" },
-  { id: "card", label: "Carte bancaire" },
-  { id: "onSite", label: "Paiement à l'acte" },
-];
-
 function matchesPower(power: number, filterId: PowerFilterId) {
   switch (filterId) {
     case "ultraLevel2":
@@ -85,10 +66,6 @@ function matchesPower(power: number, filterId: PowerFilterId) {
       return power >= 150 && power < 350;
     case "veryFast":
       return power >= 50 && power < 150;
-    case "fast":
-      return power > 22 && power < 50;
-    case "standard":
-      return power <= 22;
   }
 }
 
@@ -98,18 +75,14 @@ export function getActiveFilterCount(filters: MapFiltersState) {
   if (filters.access !== "all") count += 1;
   count += filters.power.length;
   count += filters.connectors.length;
-  count += filters.payment.length;
   if (normalizeText(filters.itineranceQuery).length > 0) count += 1;
   count += filters.selectedOperators.length;
-  if (filters.reservationOnly) count += 1;
-  if (filters.pmrOnly) count += 1;
-  if (filters.twoWheelsOnly) count += 1;
 
   return count;
 }
 
 export function matchesStationFilters(
-  station: QualichargeEVSEConsolidated,
+  station: IRVEMapStation,
   filters: MapFiltersState
 ) {
   if (filters.access === "free" && station.condition_acces !== ConditionAcces.ACCESS_LIBRE) {
@@ -143,21 +116,9 @@ export function matchesStationFilters(
     return false;
   }
 
-  if (filters.payment.includes("free") && station.gratuit !== true) {
-    return false;
-  }
-
-  if (filters.payment.includes("card") && station.paiement_cb !== true) {
-    return false;
-  }
-
-  if (filters.payment.includes("onSite") && !station.paiement_acte) {
-    return false;
-  }
-
   if (
     !matchesTextQuery(station.id_station_itinerance, filters.itineranceQuery) &&
-    !station.pdcs.some((pdc) => matchesTextQuery(pdc.id_pdc_itinerance, filters.itineranceQuery))
+    !station.pdc_itinerance_ids.some((id) => matchesTextQuery(id, filters.itineranceQuery))
   ) {
     return false;
   }
@@ -172,21 +133,9 @@ export function matchesStationFilters(
     return false;
   }
 
-  if (filters.reservationOnly && !station.reservation) {
-    return false;
-  }
-
-  if (filters.pmrOnly && station.accessibilite_pmr === AccessibilitePMR.NON_ACCESSIBLE) {
-    return false;
-  }
-
-  if (filters.twoWheelsOnly && !station.station_deux_roues) {
-    return false;
-  }
-
   return true;
 }
 
-export function filterStations(stations: QualichargeEVSEConsolidated[], filters: MapFiltersState) {
+export function filterStations(stations: IRVEMapStation[], filters: MapFiltersState) {
   return stations.filter((station) => matchesStationFilters(station, filters));
 }

@@ -3,11 +3,11 @@
 import { useMemo, useState } from "react";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 import { Button } from "@codegouvfr/react-dsfr/Button";
-import { Select } from "@codegouvfr/react-dsfr/Select";
 import { SegmentedControl, type SegmentedControlProps } from "@codegouvfr/react-dsfr/SegmentedControl";
 
 import { useMapFiltersState } from "@/hooks/useMapFiltersState";
 import { useIRVEData } from "@/hooks/useIRVEData";
+import { useStationDetails } from "@/hooks/useStationDetails";
 import {
   getHeatmapDefinition,
   SERVICE_HEATMAPS,
@@ -18,7 +18,7 @@ import {
   isHeatmapDisplayMode,
   type MapDisplayMode,
 } from "@/lib/irve/mapModes";
-import type { QualichargeEVSEConsolidated } from "@/types/irve";
+import type { IRVEMapStation } from "@/types/irve-runtime";
 import { matchesStationFilters } from "@/lib/irve/mapFilters";
 import { LoadingOverlay } from "./LoadingOverlay";
 import { MapAnalysisPanel } from "./MapAnalysisPanel";
@@ -32,16 +32,21 @@ import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility
 import "leaflet-defaulticon-compatibility";
 
 export default function IRVEMap() {
-  const { points, loadState } = useIRVEData();
+  const { stations, loadState } = useIRVEData();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [isHeatmapPanelOpen, setIsHeatmapPanelOpen] = useState(false);
-  const [selectedStation, setSelectedStation] = useState<QualichargeEVSEConsolidated | null>(null);
+  const [selectedStation, setSelectedStation] = useState<IRVEMapStation | null>(null);
+  const selectedStationKey = selectedStation?.station_key ?? null;
+  const {
+    station: selectedStationDetails,
+    isLoading: isStationDetailsLoading,
+    error: stationDetailsError,
+  } = useStationDetails(selectedStationKey);
   const [mapDisplayMode, setMapDisplayMode] = useState<MapDisplayMode>("markers");
   const [onlyStationsWithPrice, setOnlyStationsWithPrice] = useState(false);
   const {
     filters,
     itineranceInputValue,
-    selectedOperators,
     activeFilterCount,
     setItineranceInputValue,
     setSelectedOperators,
@@ -49,10 +54,6 @@ export default function IRVEMap() {
     setAccess,
     togglePower,
     toggleConnector,
-    togglePayment,
-    toggleReservation,
-    togglePmr,
-    toggleTwoWheels,
   } = useMapFiltersState();
 
   const mapModes = useMemo(() => buildMapModes(SERVICE_HEATMAPS), []);
@@ -62,19 +63,16 @@ export default function IRVEMap() {
   );
   const activeHeatmapMode = isHeatmapDisplayMode(mapDisplayMode) ? mapDisplayMode : null;
 
-  const { operatorOptions, operatorsWithTarification, operatorsWithoutTarification } = useMemo(() => {
+  const { operatorOptions, operatorsWithoutTarification } = useMemo(() => {
     const withTarification = new Set<string>();
     const withoutTarification = new Set<string>();
 
-    for (const point of points) {
-      const station = point.properties.row;
-      const hasTarification = station.tarification && station.tarification.trim().length > 0 && !['Inconnu', '-', 'true', 'NULL'].includes(station.tarification.trim());
-
+    for (const station of stations) {
       if (station.nom_operateur) {
-        (hasTarification ? withTarification : withoutTarification).add(station.nom_operateur);
+        (station.has_tarification ? withTarification : withoutTarification).add(station.nom_operateur);
       }
       if (station.nom_amenageur) {
-        (hasTarification ? withTarification : withoutTarification).add(station.nom_amenageur);
+        (station.has_tarification ? withTarification : withoutTarification).add(station.nom_amenageur);
       }
     }
 
@@ -96,35 +94,30 @@ export default function IRVEMap() {
 
     return {
       operatorOptions: allOperators,
-      operatorsWithTarification: Array.from(withTarification).sort((a, b) => a.localeCompare(b)),
       operatorsWithoutTarification: Array.from(withoutTarification).sort((a, b) => a.localeCompare(b)),
     };
-  }, [points]);
+  }, [stations]);
 
-  const filteredPoints = useMemo(() => {
-    return points.filter((point) => {
-      const matchesFilters = matchesStationFilters(point.properties.row, filters);
+  const filteredStations = useMemo(() => {
+    return stations.filter((station) => {
+      const matchesFilters = matchesStationFilters(station, filters);
       if (!matchesFilters) {
         return false;
       }
 
       if (mapDisplayMode === "pricing" && onlyStationsWithPrice) {
-        return point.properties.row.summary.price_per_kwh !== null;
+        return station.summary.pricing_value !== null;
       }
 
       return true;
     });
-  }, [filters, mapDisplayMode, onlyStationsWithPrice, points]);
+  }, [filters, mapDisplayMode, onlyStationsWithPrice, stations]);
 
-  const filteredStations = useMemo(
-    () => filteredPoints.map((point) => point.properties.row),
-    [filteredPoints]
-  );
   const uniqueStationCount = useMemo(() => {
     const stationIds = new Set<string>();
 
     for (const station of filteredStations) {
-      stationIds.add(station.id_station_itinerance || station.adresse_station);
+      stationIds.add(station.station_key);
     }
 
     return stationIds.size;
@@ -140,12 +133,12 @@ export default function IRVEMap() {
       return null;
     }
 
-    return filteredPoints.some(
-      (point) => point.properties.row.id_station_itinerance === selectedStation.id_station_itinerance
+    return filteredStations.some(
+      (station) => station.station_key === selectedStation.station_key
     )
       ? selectedStation
       : null;
-  }, [filteredPoints, selectedStation]);
+  }, [filteredStations, selectedStation]);
   const hasOpenPanel = isFiltersOpen || isHeatmapPanelOpen || visibleSelectedStation !== null;
 
   return (
@@ -252,16 +245,12 @@ export default function IRVEMap() {
         onAccessChange={setAccess}
         onTogglePower={togglePower}
         onToggleConnector={toggleConnector}
-        onTogglePayment={togglePayment}
         onItineranceQueryChange={setItineranceInputValue}
         onSelectedOperatorsChange={setSelectedOperators}
-        onToggleReservation={toggleReservation}
-        onTogglePmr={togglePmr}
-        onToggleTwoWheels={toggleTwoWheels}
       />
 
       <MapViewport
-        points={filteredPoints}
+        stations={filteredStations}
         mode={mapDisplayMode}
         selectedStation={visibleSelectedStation}
         isPanelOpen={hasOpenPanel}
@@ -273,7 +262,10 @@ export default function IRVEMap() {
       />
 
       <StationDetailsPanel
-        station={visibleSelectedStation}
+        station={visibleSelectedStation ? selectedStationDetails : null}
+        previewStation={visibleSelectedStation}
+        isLoading={Boolean(visibleSelectedStation) && isStationDetailsLoading}
+        error={visibleSelectedStation ? stationDetailsError : null}
         isOpen={visibleSelectedStation !== null}
         onClose={() => setSelectedStation(null)}
       />

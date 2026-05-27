@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { fetchPanorama } from "@/lib/irve/panoramax/fetch-panoramax-image";
 import { type PanoramaResult } from "@/types/panoramax";
@@ -27,7 +27,6 @@ function parseCoordinates(coords: string | null | undefined) {
 
 export function usePanoramaPicture(coords: string | null | undefined, delta = 0.0002) {
   const parsedCoords = useMemo(() => parseCoordinates(coords), [coords]);
-  const previousCoordsRef = useRef<typeof parsedCoords>(null);
   const [picture, setPicture] = useState<PanoramaResult | null>(null);
 
   useEffect(() => {
@@ -36,14 +35,8 @@ export function usePanoramaPicture(coords: string | null | undefined, delta = 0.
     }
 
     if (!parsedCoords) {
-      if (previousCoordsRef.current !== null) {
-        setPicture(null);
-        previousCoordsRef.current = null;
-      }
       return;
     }
-
-    previousCoordsRef.current = parsedCoords;
 
     let isCancelled = false;
 
@@ -72,5 +65,5 @@ export function usePanoramaPicture(coords: string | null | undefined, delta = 0.
     return null;
   }
 
-  return picture;
+  return parsedCoords ? picture : null;
 }

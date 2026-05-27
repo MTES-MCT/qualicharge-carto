@@ -81,27 +81,30 @@ export function MultiSelectCheckbox({
     [selectedValues, onChange]
   );
 
+  const closeDropdown = useCallback(() => {
+    setIsOpen(false);
+    setSearchQuery("");
+  }, []);
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
         containerRef.current &&
         !containerRef.current.contains(event.target as Node)
       ) {
-        setIsOpen(false);
+        closeDropdown();
       }
     }
 
     if (isOpen) {
       document.addEventListener("mousedown", handleClickOutside);
       setTimeout(() => searchInputRef.current?.focus(), 0);
-    } else {
-      setSearchQuery("");
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [isOpen]);
+  }, [closeDropdown, isOpen]);
 
   const selectedOptions = useMemo(
     () =>
@@ -126,7 +129,13 @@ export function MultiSelectCheckbox({
         aria-expanded={isOpen}
         aria-controls={listId}
         disabled={disabled}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          if (isOpen) {
+            closeDropdown();
+          } else {
+            setIsOpen(true);
+          }
+        }}
       >
         <span className="block overflow-hidden text-ellipsis whitespace-nowrap text-left">
           {displayText}

@@ -8,11 +8,9 @@ import { Card } from "@codegouvfr/react-dsfr/Card";
 import { Checkbox } from "@codegouvfr/react-dsfr/Checkbox";
 import { Input } from "@codegouvfr/react-dsfr/Input";
 import { SegmentedControl } from "@codegouvfr/react-dsfr/SegmentedControl";
-import { ToggleSwitch } from "@codegouvfr/react-dsfr/ToggleSwitch";
 
 import {
   CONNECTOR_FILTER_OPTIONS,
-  PAYMENT_FILTER_OPTIONS,
   POWER_FILTER_OPTIONS,
   type MapFiltersState,
 } from "@/lib/irve/mapFilters";
@@ -34,12 +32,8 @@ interface MapFiltersPanelProps {
   onAccessChange: (value: MapFiltersState["access"]) => void;
   onTogglePower: (value: typeof POWER_FILTER_OPTIONS[number]["id"]) => void;
   onToggleConnector: (value: typeof CONNECTOR_FILTER_OPTIONS[number]["id"]) => void;
-  onTogglePayment: (value: typeof PAYMENT_FILTER_OPTIONS[number]["id"]) => void;
   onItineranceQueryChange: (value: string) => void;
   onSelectedOperatorsChange: (value: string[]) => void;
-  onToggleReservation: () => void;
-  onTogglePmr: () => void;
-  onToggleTwoWheels: () => void;
 }
 
 interface CheckboxOption {
@@ -140,12 +134,8 @@ export function MapFiltersPanel({
   onAccessChange,
   onTogglePower,
   onToggleConnector,
-  onTogglePayment,
   onItineranceQueryChange,
   onSelectedOperatorsChange,
-  onToggleReservation,
-  onTogglePmr,
-  onToggleTwoWheels,
 }: MapFiltersPanelProps) {
   return (
     <MapSidePanel
@@ -270,33 +260,6 @@ export function MapFiltersPanel({
           }))}
         />
       </FilterAccordionSection>
-
-      {/* <FilterAccordionSection label="Paiement">
-        <FilterCheckboxGroup
-          legend="Moyens de paiement"
-          options={PAYMENT_FILTER_OPTIONS.map((option) => ({
-            checked: filters.payment.includes(option.id),
-            label: option.label,
-            onChange: () => onTogglePayment(option.id),
-          }))}
-        />
-      </FilterAccordionSection> */}
-
-      {/* <FilterAccordionSection label="Services et accessibilité">
-        <div className="irve-filters-panel__toggles">
-          {serviceToggles.map((toggle) => (
-            <ToggleSwitch
-              labelPosition="left"
-              key={toggle.label}
-              checked={toggle.checked}
-              label={toggle.label}
-              helperText={toggle.helperText}
-              showCheckedHint={false}
-              onChange={toggle.onChange}
-            />
-          ))}
-        </div>
-      </FilterAccordionSection> */}
 
     </MapSidePanel>
   );

@@ -21,9 +21,7 @@ export function PricingModal() {
       ]}
     >
       <p>
-
-      Nous n'affichons que les tarifs des opérateurs qui transmettent leurs
-      tarifs.
+        Nous n&apos;affichons que les tarifs des opérateurs qui transmettent leurs tarifs.
       </p>
     </pricingModal.Component>
   );

@@ -15,8 +15,7 @@ import {
   isHeatmapDisplayMode,
   type MapDisplayMode,
 } from "@/lib/irve/mapModes";
-import type { QualichargeEVSEConsolidated } from "@/types/irve";
-import type { IRVEPointFeature } from "@/types/irve-runtime";
+import type { IRVEMapStation } from "@/types/irve-runtime";
 import { ClusterLayer } from "./ClusterLayer";
 import { HeatmapLayer } from "./HeatmapLayer";
 import { MapEvents } from "./MapEvents";
@@ -25,46 +24,42 @@ const FRANCE_CENTER: [number, number] = [46.6, 2.3];
 const INITIAL_ZOOM = 6;
 
 interface MapViewportProps {
-  points: IRVEPointFeature[];
+  stations: IRVEMapStation[];
   mode: MapDisplayMode;
-  selectedStation: QualichargeEVSEConsolidated | null;
+  selectedStation: IRVEMapStation | null;
   isPanelOpen: boolean;
-  onStationSelect: (station: QualichargeEVSEConsolidated | null) => void;
+  onStationSelect: (station: IRVEMapStation | null) => void;
 }
 
 export function MapViewport({
-  points,
+  stations,
   mode,
   selectedStation,
   isPanelOpen,
   onStationSelect,
 }: MapViewportProps) {
-  const { clusters, supercluster, mapRef, zoom, updateView } = useMapClusters(points);
+  const { clusters, supercluster, mapRef, updateView } = useMapClusters(stations);
 
-  const filteredStations = useMemo(
-    () => points.map((point) => point.properties.row),
-    [points]
-  );
   const activeHeatmapMode = isHeatmapDisplayMode(mode) ? mode : null;
   const activeHeatmap = useMemo(
     () => (activeHeatmapMode ? getHeatmapDefinition(activeHeatmapMode as HeatmapMode) : null),
     [activeHeatmapMode]
   );
   const heatmapConfig = useMemo(
-    () => buildHeatmapConfig(filteredStations, activeHeatmap),
-    [activeHeatmap, filteredStations]
+    () => buildHeatmapConfig(stations, activeHeatmap),
+    [activeHeatmap, stations]
   );
   const visibleSelectedStation = useMemo(() => {
     if (!selectedStation) {
       return null;
     }
 
-    return points.some(
-      (point) => point.properties.row.id_station_itinerance === selectedStation.id_station_itinerance
+    return stations.some(
+      (station) => station.station_key === selectedStation.station_key
     )
       ? selectedStation
       : null;
-  }, [points, selectedStation]);
+  }, [stations, selectedStation]);
   const zoomPanelOffsetClass = isPanelOpen
     ? "md:left-[calc(var(--irve-map-panel-width)+1.5rem)]"
     : "md:left-4";
@@ -123,9 +118,8 @@ export function MapViewport({
         <ClusterLayer
           clusters={clusters}
           supercluster={supercluster}
-          zoom={zoom}
           displayMode={mode === "pricing" ? "pricing" : "markers"}
-          selectedStationId={visibleSelectedStation?.id_station_itinerance ?? null}
+          selectedStationId={visibleSelectedStation?.station_key ?? null}
           onStationSelect={onStationSelect}
         />
       ) : (

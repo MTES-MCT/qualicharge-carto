@@ -1,4 +1,4 @@
-import { Raccordement, type QualichargeEVSEConsolidated } from "@/types/irve";
+import type { QualichargeEVSEConsolidated } from "@/types/irve";
 
 export type DetailItem = {
   label: string;

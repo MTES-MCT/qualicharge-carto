@@ -592,6 +592,13 @@ body {
   word-break: break-word;
 }
 
+.irve-sidepanel__fact-hint {
+  display: block;
+  margin-top: 0.15rem;
+  color: #64748b;
+  font-size: 0.78rem;
+}
+
 .irve-sidepanel__empty {
   margin: 0;
   color: #64748b;
@@ -623,6 +630,75 @@ body {
 
 .irve-sidepanel__connector-item {
   min-width: 0;
+}
+
+.irve-tariff-reader {
+  display: grid;
+  gap: 1rem;
+}
+
+.irve-tariff-reader__meta {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.irve-tariff-reader__accordions {
+  margin-top: 0.25rem;
+}
+
+.irve-tariff-reader__accordion {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.irve-tariff-reader__accordion + .irve-tariff-reader__accordion {
+  margin-top: 0.55rem;
+}
+
+.irve-tariff-reader__accordion .fr-accordion__btn {
+  min-height: 2.75rem;
+  padding: 0.75rem 2.5rem 0.75rem 0.9rem;
+  color: #0f172a;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: none;
+}
+
+.irve-tariff-reader__accordion .fr-collapse {
+  margin: 0;
+}
+
+.irve-tariff-reader__lines {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.irve-tariff-reader__current {
+  padding: 0 0.9rem 0.9rem;
+}
+
+.irve-tariff-reader__validity {
+  margin: 0 0 0.15rem;
+  color: #64748b;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.irve-tariff-reader__line {
+  margin: 0;
+  color: #334155;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.irve-tariff-reader__line strong,
+.irve-tariff-reader__validity strong {
+  color: #0f172a;
+  font-weight: 700;
 }
 
 @media (max-width: 960px) {
