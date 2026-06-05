@@ -26,6 +26,8 @@ The backend accepts these optional environment variables:
 - `DYNAMIC_PARQUET_URL`: overrides the default dynamic IRVE Parquet URL.
 - `TARIFFS_PARQUET_URL`: overrides the default tariff Parquet URL. Defaults to `http://localhost:8020/d/tariffs.parquet`.
 - `PARQUET_REFRESH_INTERVAL_SECONDS`: cache refresh interval in seconds. Defaults to `300`.
+- `TARIFF_MARKER_SESSION_DURATION_MINUTES`: session duration used to evaluate tariff restrictions for map markers. Defaults to `30`.
+- `TARIFF_MARKER_SESSION_KWH`: session energy used to evaluate tariff restrictions for map markers. Defaults to `51`.
 
 ## Production
 

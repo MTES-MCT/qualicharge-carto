@@ -4,13 +4,16 @@ import type { QualichargeEVSEPdc, QualichargeTariff } from "@/types/irve";
 
 import { getFirstDisplayableTariffComponent, getStationMarkerPricing, hasDisplayableTariffComponent } from "./selection";
 
-function tariff(elements: NonNullable<NonNullable<QualichargeTariff["parsed"]>["elements"]>): QualichargeTariff {
+function tariff(
+  elements: NonNullable<NonNullable<QualichargeTariff["parsed"]>["elements"]>,
+  id = "tariff-1"
+): QualichargeTariff {
   return {
-    id: "tariff-1",
+    id,
     raw: "",
     id_pdc_itinerance: ["pdc-1"],
     parsed: {
-      id: "tariff-1",
+      id,
       currency: "EUR",
       tax_included: "YES",
       elements,
@@ -48,16 +51,60 @@ describe("tariff selection", () => {
     ).toBe(false);
   });
 
+  it("falls back to time when energy restrictions do not match the consultation", () => {
+    const selected = getFirstDisplayableTariffComponent(
+      tariff([
+        {
+          restrictions: { day_of_week: ["MONDAY"] },
+          price_components: [{ type: "ENERGY", price: 0.49 }],
+        },
+        { price_components: [{ type: "TIME", price: 1 }] },
+      ]),
+      { at: new Date("2026-05-14T10:30:00") }
+    );
+
+    expect(selected?.component.type).toBe("TIME");
+  });
+
+  it("applies beginning-of-charge restrictions for marker selection", () => {
+    const selected = getFirstDisplayableTariffComponent(
+      tariff([
+        {
+          restrictions: { max_duration: 10 },
+          price_components: [{ type: "ENERGY", price: 0.49 }],
+        },
+        { price_components: [{ type: "TIME", price: 1 }] },
+      ]),
+      { at: new Date("2026-05-14T10:30:00") }
+    );
+
+    expect(selected?.component.type).toBe("TIME");
+  });
+
   it("chooses an energy station price over a cheaper time tariff", () => {
     const summary = getStationMarkerPricing(
       [
-        pdc(tariff([{ price_components: [{ type: "TIME", price: 0.01 }] }])),
-        pdc(tariff([{ price_components: [{ type: "ENERGY", price: 0.49 }] }])),
+        pdc(tariff([{ price_components: [{ type: "TIME", price: 0.01 }] }], "time-tariff")),
+        pdc(tariff([{ price_components: [{ type: "ENERGY", price: 0.49 }] }], "energy-tariff")),
       ],
       new Date("2026-05-14T10:30:00")
     );
 
     expect(summary.dimension).toBe("ENERGY");
     expect(summary.headline).toBe("0,49 €/kWh");
+    expect(summary.tariffId).toBe("energy-tariff");
+  });
+
+  it("keeps the first matching station price within the retained dimension", () => {
+    const summary = getStationMarkerPricing(
+      [
+        pdc(tariff([{ price_components: [{ type: "ENERGY", price: 0.75 }] }])),
+        pdc(tariff([{ price_components: [{ type: "ENERGY", price: 0.49 }] }])),
+      ],
+      new Date("2026-05-14T10:30:00")
+    );
+
+    expect(summary.dimension).toBe("ENERGY");
+    expect(summary.headline).toBe("0,75 €/kWh");
   });
 });

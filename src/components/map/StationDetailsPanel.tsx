@@ -63,7 +63,7 @@ export function StationDetailsPanel({
       essentiel: <StationEssentialTab station={station} copiedKey={copiedKey} copy={copy} />,
       connecteurs: <StationConnectorsTab station={station} connectorStatusItems={connectorStatusItems} />,
       acces: <StationAccessTab station={station} paymentTags={paymentTags} />,
-      tarification: <StationPricingTab station={station} />,
+      tarification: <StationPricingTab station={station} mapPricingSummary={previewStation?.summary} />,
       details: <StationDetailsTab station={station} sections={sections} copiedKey={copiedKey} copy={copy} />,
     }
     :

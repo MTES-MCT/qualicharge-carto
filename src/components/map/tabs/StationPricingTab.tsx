@@ -9,10 +9,10 @@ import {
   getTariffDimensionGroups,
   getTariffSummary,
 } from "@/lib/irve/tariffs";
+import type { IRVEMapStationSummary } from "@/types/irve-runtime";
 import type { StationDetailsTabProps } from "./shared";
 import {
   getHighlightedTariffTextParts,
-  getTaxIncludedLabel,
   getTariffDisplayId,
   getTariffLineViewModel,
   getTariffValidityText,
@@ -31,30 +31,19 @@ function renderHighlightedText(text: string) {
   );
 }
 
-function renderTariffLine(line: ReturnType<typeof getTariffDimensionGroups>[number]["lines"][number], hasSeveralLines: boolean) {
-  const viewModel = getTariffLineViewModel(line, hasSeveralLines);
-
-  return (
-    <>
-      <strong>{viewModel.amount}</strong>
-      {viewModel.restrictions.length > 0 ? " " : null}
-      {viewModel.restrictions.map((restriction, index) => (
-        <span key={`${restriction}-${index}`}>
-          {index > 0 ? " et " : null}
-          {renderHighlightedText(restriction)}
-        </span>
-      ))}
-    </>
-  );
+interface StationPricingTabProps extends StationDetailsTabProps {
+  mapPricingSummary?: IRVEMapStationSummary | null;
 }
 
-export function StationPricingTab({ station }: StationDetailsTabProps) {
+export function StationPricingTab({ station, mapPricingSummary }: StationPricingTabProps) {
   const consultationDate = new Date();
   const applicableTariffs = getUniqueApplicableTariffEntries(station);
   const bestTariff = getBestStationTariff(applicableTariffs.map((entry) => entry.tariff), consultationDate);
   const bestSummary = getTariffSummary(bestTariff, consultationDate);
-  const bestDimensionLabel = getTariffComponentLabel(bestSummary.dimension);
-  const sortedTariffs = sortTariffEntries(applicableTariffs, bestTariff);
+  const mapSummary = mapPricingSummary ?? station.summary;
+  const markerTariff = applicableTariffs.find((entry) => entry.tariff.id === mapSummary.pricing_tariff_id)?.tariff ?? null;
+  const markerDimensionLabel = getTariffComponentLabel(mapSummary.pricing_dimension);
+  const sortedTariffs = sortTariffEntries(applicableTariffs, markerTariff ?? bestTariff);
 
   return (
     <div className="irve-sidepanel__tab-stack">
@@ -76,66 +65,62 @@ export function StationPricingTab({ station }: StationDetailsTabProps) {
             title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
             desc={
               <div className="irve-tariff-reader">
-                {/* {tariff.parsed?.currency || getTaxIncludedLabel(tariff.parsed?.tax_included) ? (
-                  <p className="irve-tariff-reader__meta">
-                    {[
-                      tariff.parsed?.currency,
-                      getTaxIncludedLabel(tariff.parsed?.tax_included),
-                    ].filter(Boolean).join(" · ")}
-                  </p>
-                ) : null} */}
                 {validityText ? (
                   <p className="irve-tariff-reader__validity">{renderHighlightedText(validityText)}</p>
                 ) : null}
-                {tariff.id === bestTariff?.id ? (
+                {tariff.id === markerTariff?.id ? (
                   <div>
                     <Badge severity="success">Applicable à cette date</Badge>
                   </div>
                 ) : null}
 
                 {dimensionGroups.length > 0 ? (
-                  <div className="fr-accordions-group irve-tariff-reader__accordions">
-                    {tariff.id === bestTariff?.id ? (
-                      <Accordion
-                        label="tarif actuellement applicable"
-                        defaultExpanded
-                        classes={{
-                          root: "irve-tariff-reader__accordion",
-                          title: "irve-tariff-reader__accordion-title",
-                        }}
-                      >
-                        <dl className="irve-sidepanel__facts irve-tariff-reader__current">
-                          <div className="irve-sidepanel__fact-row">
-                            <div>
-                              <dt>Composante carte</dt>
+                  <div className="irve-tariff-reader__details">
+                    {tariff.id === markerTariff?.id ? (
+                      <dl className="irve-sidepanel__facts irve-tariff-reader__current">
+                        <div className="irve-sidepanel__fact-row">
+                          <div>
+                            <dt>Composante carte</dt>
                           </div>
                           <dd>
-                            {bestSummary.headline ?? "Tarif disponible"}
-                            {bestSummary.dimension ? <span className="irve-sidepanel__fact-hint">{bestDimensionLabel}</span> : null}
+                            {mapSummary.pricing_headline ?? bestSummary.headline ?? "Tarif disponible"}
+                            {mapSummary.pricing_dimension ? <span className="irve-sidepanel__fact-hint">{markerDimensionLabel}</span> : null}
                           </dd>
                         </div>
                       </dl>
-                    </Accordion>
-                  ) : null}
+                    ) : null}
 
-                    {dimensionGroups.map((group) => (
-                      <Accordion
-                        key={`${tariff.id}-${group.type}`}
-                        label={group.label.toLocaleLowerCase("fr-FR")}
-                        classes={{
-                          root: "irve-tariff-reader__accordion",
-                          title: "irve-tariff-reader__accordion-title",
-                      }}
-                    >
-                      <div className="irve-tariff-reader__lines">
-                        {group.lines.map((line, lineIndex) => (
-                          <p key={`${tariff.id}-${group.type}-${lineIndex}`} className="irve-tariff-reader__line">
-                            {renderTariffLine(line, group.lines.length > 1)}
-                            </p>
-                          ))}
-                        </div>
-                      </Accordion>
-                    ))}
+                    <div className="fr-accordions-group irve-tariff-reader__accordions">
+                      {dimensionGroups.map((group) => (
+                        <Accordion
+                          key={`${tariff.id}-${group.type}`}
+                          label={group.label}
+                          classes={{
+                            root: "irve-tariff-reader__accordion",
+                            title: "irve-tariff-reader__accordion-title",
+                          }}
+                        >
+                          <ul className="irve-tariff-reader__lines">
+                            {group.lines.map((line, lineIndex) => {
+                              const viewModel = getTariffLineViewModel(line, group.lines.length > 1);
+
+                              return (
+                                <li key={`${tariff.id}-${group.type}-${lineIndex}`} className="irve-tariff-reader__line">
+                                  <strong>{viewModel.amount}</strong>
+                                  {viewModel.restrictions.length > 0 ? (
+                                    <ul className="irve-tariff-reader__restrictions">
+                                      {viewModel.restrictions.map((restriction, index) => (
+                                        <li key={`${restriction}-${index}`}>{renderHighlightedText(restriction)}</li>
+                                      ))}
+                                    </ul>
+                                  ) : null}
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </Accordion>
+                      ))}
+                    </div>
                   </div>
                 ) : (
                   <p className="irve-sidepanel__missing">Aucune composante tarifaire exploitable.</p>

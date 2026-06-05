@@ -644,8 +644,14 @@ body {
   line-height: 1.45;
 }
 
-.irve-tariff-reader__accordions {
+.irve-tariff-reader__details {
   margin-top: 0.25rem;
+  display: grid;
+  gap: 0.85rem;
+}
+
+.irve-tariff-reader__accordions {
+  margin-top: 0;
 }
 
 .irve-tariff-reader__accordion {
@@ -671,14 +677,8 @@ body {
   margin: 0;
 }
 
-.irve-tariff-reader__lines {
-  display: grid;
-  gap: 0.45rem;
-  padding: 0 0.9rem 0.9rem;
-}
-
 .irve-tariff-reader__current {
-  padding: 0 0.9rem 0.9rem;
+  margin: 0;
 }
 
 .irve-tariff-reader__validity {
@@ -688,11 +688,28 @@ body {
   line-height: 1.45;
 }
 
-.irve-tariff-reader__line {
+.irve-tariff-reader__lines,
+.irve-tariff-reader__restrictions {
   margin: 0;
+}
+
+.irve-tariff-reader__lines {
+  display: grid;
+  gap: 0.45rem;
+  padding: 0 0.9rem 0.9rem 2rem;
+}
+
+.irve-tariff-reader__line {
   color: #334155;
   font-size: 0.9rem;
   line-height: 1.5;
+}
+
+.irve-tariff-reader__restrictions {
+  display: grid;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+  padding-left: 1.1rem;
 }
 
 .irve-tariff-reader__line strong,

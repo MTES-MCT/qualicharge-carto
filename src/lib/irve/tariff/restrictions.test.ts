@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getTariffRestrictionTexts, tariffElementMatchesConsultation } from "./restrictions";
+import { getTariffCurrentPriceParams, getTariffRestrictionTexts, tariffElementMatchesConsultation } from "./restrictions";
 
 describe("tariff restrictions", () => {
   it("matches consultation day, time, date, and max power restrictions", () => {
@@ -29,5 +29,32 @@ describe("tariff restrictions", () => {
         max_power: 112.1,
       })
     ).toEqual(["les Lundis, Jeudis", "jusqu’à 05:15", "puissance inférieure à 112,1 kW"]);
+  });
+
+  it("uses environment overrides for marker session duration and energy", () => {
+    const previousDuration = process.env.TARIFF_MARKER_SESSION_DURATION_MINUTES;
+    const previousKwh = process.env.TARIFF_MARKER_SESSION_KWH;
+
+    process.env.TARIFF_MARKER_SESSION_DURATION_MINUTES = "45";
+    process.env.TARIFF_MARKER_SESSION_KWH = "12.5";
+
+    try {
+      const params = getTariffCurrentPriceParams(new Date("2026-05-14T10:30:00"), 120);
+
+      expect(params.paramSession.duration).toBe(45);
+      expect(params.paramSession.kwh).toBe(12.5);
+    } finally {
+      if (previousDuration == null) {
+        delete process.env.TARIFF_MARKER_SESSION_DURATION_MINUTES;
+      } else {
+        process.env.TARIFF_MARKER_SESSION_DURATION_MINUTES = previousDuration;
+      }
+
+      if (previousKwh == null) {
+        delete process.env.TARIFF_MARKER_SESSION_KWH;
+      } else {
+        process.env.TARIFF_MARKER_SESSION_KWH = previousKwh;
+      }
+    }
   });
 });

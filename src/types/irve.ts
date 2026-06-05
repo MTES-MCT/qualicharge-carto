@@ -221,6 +221,7 @@ export interface QualichargeEVSEStationSummary {
   pricing_unit: string | null;
   pricing_status: string | null;
   pricing_headline: string | null;
+  pricing_tariff_id: string | null;
   applicable_tariff_count: number;
 }
 

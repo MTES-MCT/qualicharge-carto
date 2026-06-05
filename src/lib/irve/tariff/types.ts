@@ -8,6 +8,7 @@ export interface TariffPricingSummary {
   value: number | null;
   dimension: TariffMarkerDimension | null;
   unit: string | null;
+  tariffId: string | null;
 }
 
 export interface TariffComponentLine {

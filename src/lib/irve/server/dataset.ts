@@ -511,6 +511,7 @@ function consolidateStation(pdcs: QualichargeEVSEPdc[], at: Date): QualichargeEV
       pricing_unit: tariffSummary.unit,
       pricing_status: tariffSummary.status,
       pricing_headline: tariffSummary.headline,
+      pricing_tariff_id: tariffSummary.tariffId,
       applicable_tariff_count: applicableTariffs.filter(Boolean).length,
     },
   };

@@ -2,6 +2,61 @@ import type { QualichargeTariffElement } from "@/types/irve";
 
 import { DAY_CODES, JS_DAY_TO_OCPI } from "./constants";
 
+const DEFAULT_MARKER_SESSION_DURATION_MINUTES = 30;
+const DEFAULT_MARKER_SESSION_KWH = 51;
+
+export interface TariffParamSession {
+  time: string;
+  date: string;
+  day_of_week: string;
+  duration: number;
+  kwh: number;
+}
+
+export interface TariffParamPdc {
+  power?: number;
+}
+
+export interface TariffParamOther {
+  current: number;
+  vehicle_soc: number;
+  congestion: number;
+  reservation: boolean;
+}
+
+export interface TariffCurrentPriceParams {
+  paramSession: TariffParamSession;
+  paramPdc: TariffParamPdc;
+  paramOther: TariffParamOther;
+}
+
+function getPositiveNumberEnv(name: string, fallback: number) {
+  const parsed = Number(process.env[name]);
+
+  return Number.isFinite(parsed) && parsed >= 0 ? parsed : fallback;
+}
+
+export function getTariffCurrentPriceParams(at: Date, power?: number): TariffCurrentPriceParams {
+  return {
+    paramSession: {
+      time: `${String(at.getHours()).padStart(2, "0")}:${String(at.getMinutes()).padStart(2, "0")}`,
+      date: `${at.getFullYear()}-${String(at.getMonth() + 1).padStart(2, "0")}-${String(at.getDate()).padStart(2, "0")}`,
+      day_of_week: JS_DAY_TO_OCPI[at.getDay()],
+      duration: getPositiveNumberEnv("TARIFF_MARKER_SESSION_DURATION_MINUTES", DEFAULT_MARKER_SESSION_DURATION_MINUTES),
+      kwh: getPositiveNumberEnv("TARIFF_MARKER_SESSION_KWH", DEFAULT_MARKER_SESSION_KWH),
+    },
+    paramPdc: {
+      power,
+    },
+    paramOther: {
+      current: 1,
+      vehicle_soc: 50,
+      congestion: 10,
+      reservation: false,
+    },
+  };
+}
+
 function getTimeMinutes(value: unknown) {
   if (typeof value !== "string" || value.length === 0) {
     return null;
@@ -15,10 +70,14 @@ function getTimeMinutes(value: unknown) {
   return hours * 60 + minutes;
 }
 
-function isNowWithinTimeRange(startTime: unknown, endTime: unknown, at: Date) {
+function isTimeWithinTimeRange(startTime: unknown, endTime: unknown, time: string) {
   const start = getTimeMinutes(startTime);
   const end = getTimeMinutes(endTime);
-  const now = at.getHours() * 60 + at.getMinutes();
+  const now = getTimeMinutes(time);
+
+  if (now == null) {
+    return true;
+  }
 
   if (start == null && end == null) return true;
   if (start != null && end != null) {
@@ -29,7 +88,7 @@ function isNowWithinTimeRange(startTime: unknown, endTime: unknown, at: Date) {
   return end == null || now < end;
 }
 
-function toDateOnly(value: unknown) {
+function getDateOnlyTime(value: unknown) {
   if (typeof value !== "string" || value.length === 0) {
     return null;
   }
@@ -38,10 +97,14 @@ function toDateOnly(value: unknown) {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-function isNowWithinDateRange(startDate: unknown, endDate: unknown, at: Date) {
-  const current = new Date(at.getFullYear(), at.getMonth(), at.getDate()).getTime();
-  const start = toDateOnly(startDate)?.getTime();
-  const end = toDateOnly(endDate)?.getTime();
+function isDateWithinDateRange(startDate: unknown, endDate: unknown, date: string) {
+  const current = getDateOnlyTime(date)?.getTime();
+  const start = getDateOnlyTime(startDate)?.getTime();
+  const end = getDateOnlyTime(endDate)?.getTime();
+
+  if (current == null) {
+    return true;
+  }
 
   return (start == null || start <= current) && (end == null || end >= current);
 }
@@ -59,6 +122,22 @@ function isRestrictionNumberMatched(
   return Number.isFinite(parsed) ? comparator(parsed, current) : true;
 }
 
+function isReservationMatched(restriction: unknown, reservation: boolean) {
+  if (restriction == null) {
+    return true;
+  }
+
+  if (restriction === "RESERVATION") {
+    return reservation;
+  }
+
+  if (restriction === "RESERVATION_EXPIRES") {
+    return !reservation;
+  }
+
+  return true;
+}
+
 export function getTariffElementRestrictions(element: QualichargeTariffElement) {
   return element.restrictions ?? {};
 }
@@ -67,46 +146,58 @@ export function tariffElementMatchesConsultation(
   element: QualichargeTariffElement,
   options: { at: Date; power?: number }
 ) {
+  const { paramSession, paramPdc, paramOther } = getTariffCurrentPriceParams(options.at, options.power);
+
+  return tariffElementRestrictionStatus(element, paramSession, paramPdc, paramOther) === true;
+}
+
+export function tariffElementRestrictionStatus(
+  element: QualichargeTariffElement,
+  paramSession: TariffParamSession,
+  paramPdc: TariffParamPdc,
+  paramOther: TariffParamOther
+): boolean | null {
   const restrictions = getTariffElementRestrictions(element);
-  const at = options.at;
 
   const days = Array.isArray(restrictions.day_of_week) ? restrictions.day_of_week.map(String) : null;
-  if (days && days.length > 0 && !days.includes(JS_DAY_TO_OCPI[at.getDay()])) {
+  if (days && days.length > 0 && !days.includes(paramSession.day_of_week)) {
     return false;
   }
 
-  if (!isNowWithinDateRange(restrictions.start_date, restrictions.end_date, at)) {
+  if (!isDateWithinDateRange(restrictions.start_date, restrictions.end_date, paramSession.date)) {
     return false;
   }
 
-  if (!isNowWithinTimeRange(restrictions.start_time, restrictions.end_time, at)) {
+  if (!isTimeWithinTimeRange(restrictions.start_time, restrictions.end_time, paramSession.time)) {
     return false;
   }
 
   if (
-    options.power != null &&
-    (!isRestrictionNumberMatched(restrictions.min_power, options.power, (restriction, current) => current >= restriction) ||
-      !isRestrictionNumberMatched(restrictions.max_power, options.power, (restriction, current) => current <= restriction))
+    paramPdc.power != null &&
+    (!isRestrictionNumberMatched(restrictions.min_power, paramPdc.power, (restriction, current) => current >= restriction) ||
+      !isRestrictionNumberMatched(restrictions.max_power, paramPdc.power, (restriction, current) => current <= restriction))
   ) {
     return false;
   }
 
+  if (
+    !isRestrictionNumberMatched(restrictions.min_duration, paramSession.duration, (restriction, current) => current >= restriction) ||
+    !isRestrictionNumberMatched(restrictions.max_duration, paramSession.duration, (restriction, current) => current <= restriction) ||
+    !isRestrictionNumberMatched(restrictions.min_kwh, paramSession.kwh, (restriction, current) => current >= restriction) ||
+    !isRestrictionNumberMatched(restrictions.max_kwh, paramSession.kwh, (restriction, current) => current <= restriction) ||
+    !isRestrictionNumberMatched(restrictions.min_current, paramOther.current, (restriction, current) => current >= restriction) ||
+    !isRestrictionNumberMatched(restrictions.max_current, paramOther.current, (restriction, current) => current <= restriction) ||
+    !isRestrictionNumberMatched(restrictions.min_vehicle_soc, paramOther.vehicle_soc, (restriction, current) => current >= restriction) ||
+    !isRestrictionNumberMatched(restrictions.min_congestion_threshold, paramOther.congestion, (restriction, current) => current >= restriction)
+  ) {
+    return false;
+  }
+
+  if (!isReservationMatched(restrictions.reservation, paramOther.reservation)) {
+    return false;
+  }
+
   return true;
-}
-
-export function getConsultationRestrictionWeight(element: QualichargeTariffElement, hasPower: boolean) {
-  const restrictions = getTariffElementRestrictions(element);
-  let weight = 0;
-
-  if (Array.isArray(restrictions.day_of_week) && restrictions.day_of_week.length > 0) weight += 1;
-  if (restrictions.start_date != null) weight += 1;
-  if (restrictions.end_date != null) weight += 1;
-  if (restrictions.start_time != null) weight += 1;
-  if (restrictions.end_time != null) weight += 1;
-  if (hasPower && restrictions.min_power != null) weight += 1;
-  if (hasPower && restrictions.max_power != null) weight += 1;
-
-  return weight;
 }
 
 function formatPlainNumber(value: number) {
@@ -181,6 +272,32 @@ export function getTariffRestrictionTexts(restrictions?: Record<string, unknown>
     parts.push(`énergie supérieure à ${formatPlainNumber(minKwh)} kWh`);
   } else if (maxKwh != null) {
     parts.push(`énergie inférieure à ${formatPlainNumber(maxKwh)} kWh`);
+  }
+
+  const minCurrent = getRestrictionNumber(restrictions.min_current);
+  const maxCurrent = getRestrictionNumber(restrictions.max_current);
+  if (minCurrent != null && minCurrent > 0 && maxCurrent != null) {
+    parts.push(`courant entre ${formatPlainNumber(minCurrent)} A et ${formatPlainNumber(maxCurrent)} A`);
+  } else if (minCurrent != null && minCurrent > 0) {
+    parts.push(`courant supérieur à ${formatPlainNumber(minCurrent)} A`);
+  } else if (maxCurrent != null) {
+    parts.push(`courant inférieur à ${formatPlainNumber(maxCurrent)} A`);
+  }
+
+  const minVehicleSoc = getRestrictionNumber(restrictions.min_vehicle_soc);
+  if (minVehicleSoc != null) {
+    parts.push(`batterie supérieure à ${formatPlainNumber(minVehicleSoc)} %`);
+  }
+
+  const minCongestion = getRestrictionNumber(restrictions.min_congestion_threshold);
+  if (minCongestion != null) {
+    parts.push(`congestion supérieure à ${formatPlainNumber(minCongestion)} %`);
+  }
+
+  if (restrictions.reservation === "RESERVATION") {
+    parts.push("avec réservation");
+  } else if (restrictions.reservation === "RESERVATION_EXPIRES") {
+    parts.push("après expiration de la réservation");
   }
 
   return parts;

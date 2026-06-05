@@ -2,7 +2,7 @@ import type { QualichargeEVSEPdc, QualichargeTariff } from "@/types/irve";
 
 import { DIMENSION_ORDER } from "./constants";
 import { formatCurrency, getDisplayPrice, getTariffComponentUnit } from "./formatting";
-import { getConsultationRestrictionWeight, tariffElementMatchesConsultation } from "./restrictions";
+import { tariffElementMatchesConsultation } from "./restrictions";
 import type { TariffMarkerDimension, TariffPricingSummary } from "./types";
 
 function getDimensionRank(dimension: string | null | undefined) {
@@ -36,23 +36,22 @@ export function getFirstDisplayableTariffComponent(
   const elements = tariff?.parsed?.elements ?? [];
 
   for (const dimension of DIMENSION_ORDER) {
-    const candidates = elements.flatMap((element, elementIndex) => {
-      return (element.price_components ?? [])
-        .filter((component) => component.type === dimension && typeof getDisplayPrice(component, tariff?.parsed?.tax_included) === "number")
-        .map((component, componentIndex) => ({
-          component,
-          isMatched: tariffElementMatchesConsultation(element, { at: options.at, power: options.power }),
-          restrictionWeight: getConsultationRestrictionWeight(element, options.power != null),
-          price: getDisplayPrice(component, tariff?.parsed?.tax_included) as number,
-          order: elementIndex * 1000 + componentIndex,
-        }));
-    });
+    for (const [elementIndex, element] of elements.entries()) {
+      if (!tariffElementMatchesConsultation(element, { at: options.at, power: options.power })) {
+        continue;
+      }
 
-    if (candidates.length > 0) {
-      const matchedCandidates = candidates.filter((candidate) => candidate.isMatched);
-      const selectionPool = matchedCandidates.length > 0 ? matchedCandidates : candidates;
+      for (const [componentIndex, component] of (element.price_components ?? []).entries()) {
+        const price = getDisplayPrice(component, tariff?.parsed?.tax_included);
 
-      return selectionPool.sort((a, b) => b.restrictionWeight - a.restrictionWeight || a.order - b.order)[0];
+        if (component.type === dimension && typeof price === "number") {
+          return {
+            component,
+            price,
+            order: elementIndex * 1000 + componentIndex,
+          };
+        }
+      }
     }
   }
 
@@ -72,6 +71,7 @@ export function getTariffSummary(tariff: QualichargeTariff | null | undefined, a
       value: null,
       dimension: null,
       unit: null,
+      tariffId: null,
     };
   }
 
@@ -88,6 +88,7 @@ export function getTariffSummary(tariff: QualichargeTariff | null | undefined, a
       value: selectedPrice ?? pricePerKwh ?? null,
       dimension: (selectedComponent?.component.type as TariffMarkerDimension | undefined) ?? null,
       unit: selectedUnit,
+      tariffId: selectedComponent ? tariff.id : null,
     };
   }
 
@@ -99,6 +100,7 @@ export function getTariffSummary(tariff: QualichargeTariff | null | undefined, a
       value: selectedPrice,
       dimension: selectedComponent.component.type as TariffMarkerDimension,
       unit: selectedUnit,
+      tariffId: tariff.id,
     };
   }
 
@@ -109,6 +111,7 @@ export function getTariffSummary(tariff: QualichargeTariff | null | undefined, a
     value: null,
     dimension: null,
     unit: null,
+    tariffId: null,
   };
 }
 
@@ -135,7 +138,7 @@ export function getBestStationTariff(tariffs: Array<QualichargeTariff | undefine
 }
 
 export function getStationMarkerPricing(pdcs: QualichargeEVSEPdc[], at: Date): TariffPricingSummary {
-  const candidates = pdcs.flatMap((pdc) => {
+  const candidates = pdcs.flatMap((pdc, pdcIndex) => {
     const selected = getFirstDisplayableTariffComponent(pdc.applicable_tariff, {
       at,
       power: pdc.puissance_nominale,
@@ -150,6 +153,7 @@ export function getStationMarkerPricing(pdcs: QualichargeEVSEPdc[], at: Date): T
       component: selected.component,
       price: selected.price,
       dimension: selected.component.type as TariffMarkerDimension,
+      order: pdcIndex * 1_000_000 + selected.order,
     }];
   });
 
@@ -159,7 +163,7 @@ export function getStationMarkerPricing(pdcs: QualichargeEVSEPdc[], at: Date): T
       continue;
     }
 
-    const selected = dimensionCandidates.sort((a, b) => a.price - b.price)[0];
+    const selected = dimensionCandidates.sort((a, b) => a.order - b.order)[0];
     const unit = getTariffComponentUnit(selected.dimension);
 
     return {
@@ -169,6 +173,7 @@ export function getStationMarkerPricing(pdcs: QualichargeEVSEPdc[], at: Date): T
       value: selected.price,
       dimension: selected.dimension,
       unit,
+      tariffId: selected.tariff.id,
     };
   }
 
@@ -179,5 +184,6 @@ export function getStationMarkerPricing(pdcs: QualichargeEVSEPdc[], at: Date): T
     value: null,
     dimension: null,
     unit: null,
+    tariffId: null,
   };
 }
