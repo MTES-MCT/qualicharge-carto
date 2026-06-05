@@ -63,7 +63,7 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
           <Card
             key={tariff.id}
             title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
-            desc={
+            end={
               <div className="irve-tariff-reader">
                 {validityText ? (
                   <p className="irve-tariff-reader__validity">{renderHighlightedText(validityText)}</p>

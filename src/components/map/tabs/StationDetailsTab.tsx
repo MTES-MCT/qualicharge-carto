@@ -10,7 +10,7 @@ export function StationDetailsTab({ sections, copiedKey, copy }: DetailsTabProps
         <Card
           key={section.title}
           title={section.title}
-          desc={
+          end={
             <dl className="irve-sidepanel__facts">
               {section.items.map((item) => (
                 <CopyableValue

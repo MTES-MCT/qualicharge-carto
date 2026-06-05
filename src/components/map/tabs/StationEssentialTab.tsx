@@ -24,7 +24,7 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
     <div className="irve-sidepanel__tab-stack">
       <Card
         title="Vue d'ensemble"
-        desc={
+        end={
           <div className="irve-sidepanel__hero">
             <p>
               <b>Aménageur: </b>{station.nom_amenageur}
@@ -79,7 +79,7 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
 
       <Card
         title="Disponibilité en temps réel"
-        desc={
+        end={
           <div className="irve-sidepanel__dynamic-grid">
             <div>
               <p className="irve-sidepanel__label">État de la station</p>
@@ -125,7 +125,7 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
 
       <Card
         title="Horaires"
-        desc={
+        end={
           <div className="irve-sidepanel__schedule-block">
             <ScheduleTable horaires={station.horaires} />
           </div>

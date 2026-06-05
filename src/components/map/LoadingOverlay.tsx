@@ -39,7 +39,7 @@ export function LoadingOverlay({ loadState }: LoadingOverlayProps) {
           titleAs="h3"
           size="small"
           border
-          desc={
+          end={
             <div className="flex flex-col items-center gap-4 py-1 text-center">
               <div className="flex w-full flex-col items-center gap-3">
                 <Image

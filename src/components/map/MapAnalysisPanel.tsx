@@ -54,7 +54,7 @@ export function MapAnalysisPanel({
         titleAs="h3"
         size="small"
         border
-        desc={
+        end={
           <div className="flex flex-wrap items-center justify-between gap-2 text-sm">
             <span>
               {activeMode.kind === "heatmap"
@@ -91,7 +91,7 @@ export function MapAnalysisPanel({
           titleAs="h3"
           size="small"
           border
-          desc={
+          end={
             <div className="space-y-2 text-sm text-slate-700">
               <p className="m-0">{activeMode.description}</p>
               <p className="m-0 text-xs text-slate-500">
@@ -120,7 +120,7 @@ export function MapAnalysisPanel({
           titleAs="h3"
           size="small"
           border
-          desc={
+          end={
             <div className="space-y-3 text-sm">
               <p className="m-0 text-slate-600">{activeHeatmap.legendTitle}</p>
               <div className="h-3 w-full rounded-full bg-[linear-gradient(90deg,#1d4ed8_0%,#06b6d4_25%,#22c55e_50%,#f59e0b_75%,#dc2626_100%)]" />

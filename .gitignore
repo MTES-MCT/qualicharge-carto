@@ -22,6 +22,8 @@
 # misc
 .DS_Store
 *.pem
+/qualicharge_tariff.parquet
+/qualicharge_tariffpdc.parquet
 
 # debug
 npm-debug.log*

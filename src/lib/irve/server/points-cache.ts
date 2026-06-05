@@ -3,6 +3,7 @@ import "server-only";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
 import { loadIRVEDataset } from "@/lib/irve/server/dataset";
+import { jsonReplacer } from "@/lib/json";
 import type { QualichargeEVSEConsolidated } from "@/types/irve";
 import type { IRVEPointsPayload } from "@/types/irve-runtime";
 
@@ -53,8 +54,9 @@ async function refreshCache() {
         total: stations.length,
         updatedAt: new Date(loadedAt).toISOString(),
       };
+      const body = JSON.stringify(payload, jsonReplacer);
       const response = {
-        body: JSON.stringify(payload),
+        body,
         brotliBody: new ArrayBuffer(0),
         gzipBody: new ArrayBuffer(0),
         loadedAt,

@@ -10,7 +10,7 @@ export function StationAccessTab({ station, paymentTags }: AccessTabProps) {
     <div className="irve-sidepanel__tab-stack">
       <Card
         title="Paiement et services"
-        desc={
+        end={
           <div className="irve-sidepanel__tag-columns">
             <div>
               <p className="irve-sidepanel__label">Paiement</p>

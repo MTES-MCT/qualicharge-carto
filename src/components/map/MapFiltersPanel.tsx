@@ -152,7 +152,7 @@ export function MapFiltersPanel({
         titleAs="h3"
         size="small"
         border
-        desc={
+        end={
           <div className="irve-filters-panel__summary">
             <div className="irve-filters-panel__summary-copy">
               <strong>{stationCount} stations</strong>
@@ -181,7 +181,7 @@ export function MapFiltersPanel({
         titleAs="h3"
         size="small"
         border
-        desc={
+        end={
           <div className="flex flex-col gap-4">
             <Input
               label="Identifiant station ou point"
