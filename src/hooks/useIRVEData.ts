@@ -16,7 +16,7 @@ export function useIRVEData(): UseIRVEDataResult {
     status: "loading",
     loaded: 0,
     total: 0,
-    message: "Chargement des donnees consolidees...",
+    message: "Chargement des données consolidées...",
   });
 
   useEffect(() => {

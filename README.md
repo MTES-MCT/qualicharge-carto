@@ -33,6 +33,16 @@ The backend accepts these optional environment variables:
 - `TARIFF_MARKER_SESSION_DURATION_MINUTES`: session duration used to evaluate tariff restrictions for map markers. Defaults to `30`.
 - `TARIFF_MARKER_SESSION_KWH`: session energy used to evaluate tariff restrictions for map markers. Defaults to `51`.
 
+## Map Embedding
+
+Set `NEXT_PUBLIC_HOST_WEBSITE_URL` to display a floating link back to the website that embeds the map, for example:
+
+```bash
+NEXT_PUBLIC_HOST_WEBSITE_URL=https://www.qualicharge.beta.gouv.fr/cartographie/
+```
+
+When this variable is not set, the link is hidden. Because this value is exposed to the browser by Next.js, set it before building the app.
+
 ## Production
 
 Build and start the server with:

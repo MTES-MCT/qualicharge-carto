@@ -62,7 +62,8 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
         return (
           <Card
             key={tariff.id}
-            title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
+            title={`Tarif`}
+            // title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
             end={
               <div className="irve-tariff-reader">
                 {validityText ? (

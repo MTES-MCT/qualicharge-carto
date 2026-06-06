@@ -31,6 +31,8 @@ import "leaflet/dist/leaflet.css";
 import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
 import "leaflet-defaulticon-compatibility";
 
+const hostWebsiteUrl = process.env.NEXT_PUBLIC_HOST_WEBSITE_URL?.trim();
+
 export default function IRVEMap() {
   const { stations, loadState } = useIRVEData();
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
@@ -216,6 +218,20 @@ export default function IRVEMap() {
           </div>
         </div>
       </div>
+
+      {hostWebsiteUrl && (
+        <Button
+          className="absolute bottom-4 left-4 z-500 shadow-[0_8px_24px_rgba(15,23,42,0.16)] max-[960px]:bottom-7 max-[960px]:left-3 max-[960px]:max-w-[calc(100vw-1.5rem)]"
+          size="small"
+          iconId="fr-icon-arrow-left-line"
+          linkProps={{
+            href: hostWebsiteUrl,
+            target: "_top",
+          }}
+        >
+          Retour au site QualiCharge
+        </Button>
+      )}
 
       <MapAnalysisPanel
         isOpen={isHeatmapPanelOpen}
