@@ -1,5 +1,5 @@
 import { toIsoString, toRequiredString } from "../coerce";
-import { readParquetRows, readParquetSourceBuffer } from "../parquet";
+import { readParquetRows, readRemoteParquetBuffer } from "../parquet";
 import { parseTariffRaw, stringifyTariffRaw } from "./tariff-raw";
 import type { ConsolidatedTariffParquetRow, IndexedTariff } from "./types";
 
@@ -16,8 +16,8 @@ function parseJsonStringArray(value: unknown) {
   }
 }
 
-export async function loadConsolidatedTariffs(source: string) {
-  const file = await readParquetSourceBuffer(source);
+export async function loadConsolidatedTariffs(url: string) {
+  const file = await readRemoteParquetBuffer(url);
   const rows = await readParquetRows<ConsolidatedTariffParquetRow>(file);
 
   return rows.flatMap((row, rowIndex): IndexedTariff[] => {

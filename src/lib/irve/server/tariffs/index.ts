@@ -1,8 +1,4 @@
-import {
-  getConsolidatedTariffSource,
-  getLocalTariffSources,
-  getTariffSourceMode,
-} from "../config";
+import { getConsolidatedTariffUrl, getTariffParquetDir, getTariffSourceMode } from "../config";
 import { selectApplicableTariffs } from "./applicable";
 import { loadConsolidatedTariffs } from "./load-consolidated";
 import { loadLocalTariffFiles } from "./load-local-files";
@@ -10,11 +6,10 @@ import type { ApplicableTariffsByPdc, IndexedTariff } from "./types";
 
 async function loadTariffs() {
   if (getTariffSourceMode() === "consolidated") {
-    return loadConsolidatedTariffs(getConsolidatedTariffSource());
+    return loadConsolidatedTariffs(getConsolidatedTariffUrl());
   }
 
-  const { tariffSource, tariffPdcSource } = getLocalTariffSources();
-  return loadLocalTariffFiles(tariffSource, tariffPdcSource);
+  return loadLocalTariffFiles(getTariffParquetDir());
 }
 
 export async function loadApplicableTariffs(at: Date) {

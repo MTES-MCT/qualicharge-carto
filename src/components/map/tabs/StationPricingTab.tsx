@@ -13,10 +13,8 @@ import type { IRVEMapStationSummary } from "@/types/irve-runtime";
 import type { StationDetailsTabProps } from "./shared";
 import {
   getHighlightedTariffTextParts,
-  getTariffDisplayId,
   getTariffLineViewModel,
   getTariffValidityText,
-  getTariffVersionDate,
   getUniqueApplicableTariffEntries,
   sortTariffEntries,
 } from "./pricing/tariffText";

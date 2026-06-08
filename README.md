@@ -24,11 +24,10 @@ The backend accepts these optional environment variables:
 
 - `STATIC_PARQUET_URL`: overrides the default static IRVE Parquet URL.
 - `DYNAMIC_PARQUET_URL`: overrides the default dynamic IRVE Parquet URL.
-- `TARIFF_SOURCE_MODE`: tariff loading strategy. Use `local-files` for the temporary two-file parquet import, or `consolidated` for the legacy single parquet source. Defaults to `local-files`, unless `TARIFFS_PARQUET_URL` is set.
-- `TARIFF_PARQUET_SOURCE`: tariff parquet source for `local-files` mode. Defaults to the local file `qualicharge_tariff.parquet`.
-- `TARIFF_PDC_PARQUET_SOURCE`: tariff/PDC association parquet source for `local-files` mode. Defaults to the local file `qualicharge_tariffpdc.parquet`.
-- `TARIFFS_PARQUET_URL`: legacy consolidated tariff parquet URL for `consolidated` mode. Defaults to `http://localhost:8020/d/tariffs.parquet`.
-  Tariff sources may be local file paths or `http(s)` URLs where supported.
+- `TARIFF_SOURCE_MODE`: tariff loading strategy. Defaults to `local-files`. Use `consolidated` to load the legacy single parquet URL.
+- `TARIFF_PARQUET_DIR`: local tariff parquet root directory. Defaults to `data/tariffs`.
+  Each direct child folder is parsed as one provider and must contain `qualicharge_tariff.parquet` and `qualicharge_tariffpdc.parquet`, for example `data/tariffs/tesla/qualicharge_tariff.parquet`.
+- `TARIFFS_PARQUET_URL`: legacy consolidated tariff parquet URL used when `TARIFF_SOURCE_MODE=consolidated`. Defaults to `http://localhost:8020/d/tariffs.parquet`.
 - `PARQUET_REFRESH_INTERVAL_SECONDS`: cache refresh interval in seconds. Defaults to `300`.
 - `TARIFF_MARKER_SESSION_DURATION_MINUTES`: session duration used to evaluate tariff restrictions for map markers. Defaults to `30`.
 - `TARIFF_MARKER_SESSION_KWH`: session energy used to evaluate tariff restrictions for map markers. Defaults to `51`.
