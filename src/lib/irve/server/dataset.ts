@@ -1,6 +1,7 @@
 import "server-only";
 
-import { getStaticParquetUrl, MIN_DISPLAYED_POWER_KW, ROW_BATCH_SIZE } from "./config";
+import { MIN_DISPLAYED_POWER_KW, ROW_BATCH_SIZE } from "./config";
+import { getStaticParquetUrl } from "./data-gouv";
 import { getParquetRowCount, readParquetRowBatch, readRemoteParquetBuffer } from "./parquet";
 import { consolidateStation, createMapStation, getDynamicSummary, getStationKey } from "./stations/consolidate";
 import { getDynamicKey, loadDynamicRows } from "./stations/dynamic-rows";
@@ -26,7 +27,7 @@ export async function loadIRVEDataset() {
     loadDynamicRows(),
     loadApplicableTariffsSafely(now),
   ]);
-  const staticFile = await readRemoteParquetBuffer(getStaticParquetUrl());
+  const staticFile = await readRemoteParquetBuffer(await getStaticParquetUrl());
   const rowCount = await getParquetRowCount(staticFile);
   const stationMap = new Map<string, QualichargeEVSEPdc[]>();
 

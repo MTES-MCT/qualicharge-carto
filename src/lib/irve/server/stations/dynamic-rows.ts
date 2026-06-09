@@ -1,7 +1,7 @@
 import type { QualichargeEVSEDynamic } from "@/types/irve";
 
-import { getDynamicParquetUrl } from "../config";
 import { toNullableString, toRequiredString } from "../coerce";
+import { getDynamicParquetUrl } from "../data-gouv";
 import { readParquetRows, readRemoteParquetBuffer } from "../parquet";
 
 type DynamicParquetRow = Partial<Record<keyof QualichargeEVSEDynamic | "id_station_itinerance", unknown>>;
@@ -24,7 +24,7 @@ function toDynamicRow(row: DynamicParquetRow): QualichargeEVSEDynamic {
 }
 
 export async function loadDynamicRows() {
-  const file = await readRemoteParquetBuffer(getDynamicParquetUrl());
+  const file = await readRemoteParquetBuffer(await getDynamicParquetUrl());
   const rows = await readParquetRows<DynamicParquetRow>(file);
   const dynamicMap = new Map<string, QualichargeEVSEDynamic>();
 
