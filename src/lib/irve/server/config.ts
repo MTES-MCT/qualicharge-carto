@@ -1,7 +1,7 @@
 export const DEFAULT_STATIC_PARQUET_URL =
-  "https://object.files.data.gouv.fr/hydra-parquet/hydra-parquet/8bb0a6e2-1016-42ba-aaee-f72f55c82e9f.parquet";
+  "https://hydra.s3.rbx.io.cloud.ovh.net/parquet/8bb0a6e2-1016-42ba-aaee-f72f55c82e9f.parquet";
 export const DEFAULT_DYNAMIC_PARQUET_URL =
-  "https://object.files.data.gouv.fr/hydra-parquet/hydra-parquet/411443b1-6667-473f-8217-1c57c167408f.parquet";
+  "https://hydra.s3.rbx.io.cloud.ovh.net/parquet/411443b1-6667-473f-8217-1c57c167408f.parquet";
 export const DEFAULT_TARIFF_PARQUET_DIR = "data/tariffs";
 export const DEFAULT_TARIFFS_PARQUET_URL = "http://localhost:8020/d/tariffs.parquet";
 

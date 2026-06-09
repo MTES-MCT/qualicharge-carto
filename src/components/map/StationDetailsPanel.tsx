@@ -35,7 +35,6 @@ export function StationDetailsPanel({
   isOpen,
   onClose,
 }: StationDetailsPanelProps) {
-  const stationKey = station?.id_station_itinerance ?? previewStation?.station_key ?? "empty";
   const { copiedKey, copy, reset } = useCopyToClipboard();
   const [selectedTabId, setSelectedTabId] = useState<StationTabId>("essentiel");
   const panoramaPicture = usePanoramaPicture(station?.coordonneesXY);
@@ -98,7 +97,6 @@ export function StationDetailsPanel({
         />
       ) : station ? (
         <Tabs
-          key={stationKey}
           className="irve-sidepanel__tabs"
           selectedTabId={selectedTabId}
           onTabChange={(tabId) => setSelectedTabId(tabId as StationTabId)}

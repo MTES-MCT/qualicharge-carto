@@ -510,14 +510,21 @@ body {
   min-height: 0;
 }
 
+.irve-sidepanel__tabs {
+  --tabs-height: auto !important;
+  height: auto !important;
+  overflow: visible;
+  transition: none;
+}
+
 .irve-sidepanel__tabs .fr-tabs__panel {
   height: auto;
 }
 
 .irve-sidepanel__tabs .fr-tabs__panel.fr-tabs__panel--selected {
   display: block;
-  height: 100%;
-  overflow: auto;
+  height: auto;
+  overflow: visible;
 }
 
 .irve-sidepanel__label {
