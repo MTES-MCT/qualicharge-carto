@@ -28,4 +28,31 @@ describe("tariff presentation", () => {
 
     expect(energyGroup.lines.map((line) => line.amount)).toEqual(["0,75 €/kWh", "0,49 €/kWh"]);
   });
+
+  it("ignores non-positive and missing price components", () => {
+    const tariff: QualichargeTariff = {
+      id: "tariff-1",
+      raw: "",
+      id_pdc_itinerance: ["pdc-1"],
+      parsed: {
+        id: "tariff-1",
+        currency: "EUR",
+        tax_included: "YES",
+        elements: [
+          {
+            price_components: [
+              { type: "ENERGY", price: 0 },
+              { type: "ENERGY", price: null },
+              { type: "ENERGY", price: -0.1 },
+              { type: "ENERGY", price: 0.49 },
+            ],
+          },
+        ],
+      },
+    };
+
+    const [energyGroup] = getTariffDimensionGroups(tariff);
+
+    expect(energyGroup.lines.map((line) => line.amount)).toEqual(["0,49 €/kWh"]);
+  });
 });

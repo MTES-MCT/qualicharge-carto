@@ -11,6 +11,10 @@ export function getTariffDimensionGroups(tariff: QualichargeTariff): TariffDimen
 
   for (const element of tariff.parsed?.elements ?? []) {
     for (const component of element.price_components ?? []) {
+      if (typeof component.price !== "number" || component.price <= 0) {
+        continue;
+      }
+
       const amount = formatTariffComponent(component, tariff.parsed?.currency, tariff.parsed?.tax_included);
       if (!amount) {
         continue;
