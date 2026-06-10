@@ -1,16 +1,17 @@
 import type { QualichargeEVSEDynamic } from "@/types/irve";
 
+import { cacheOptions } from "../config";
 import { toNullableString, toRequiredString } from "../coerce";
-import { getDynamicParquetUrl } from "../data-gouv";
-import { readParquetRows, readRemoteParquetBuffer } from "../parquet";
+import { parseCsvRecordStream } from "../csv";
+import { getDynamicCsvUrl } from "../data-gouv";
 
-type DynamicParquetRow = Partial<Record<keyof QualichargeEVSEDynamic | "id_station_itinerance", unknown>>;
+type DynamicCsvRow = Partial<Record<keyof QualichargeEVSEDynamic | "id_station_itinerance", unknown>>;
 
 export function getDynamicKey(idPdcItinerance?: string) {
   return toRequiredString(idPdcItinerance);
 }
 
-function toDynamicRow(row: DynamicParquetRow): QualichargeEVSEDynamic {
+function toDynamicRow(row: DynamicCsvRow): QualichargeEVSEDynamic {
   return {
     id_pdc_itinerance: toRequiredString(row.id_pdc_itinerance),
     horodatage: toRequiredString(row.horodatage),
@@ -24,11 +25,18 @@ function toDynamicRow(row: DynamicParquetRow): QualichargeEVSEDynamic {
 }
 
 export async function loadDynamicRows() {
-  const file = await readRemoteParquetBuffer(await getDynamicParquetUrl());
-  const rows = await readParquetRows<DynamicParquetRow>(file);
+  const response = await fetch(await getDynamicCsvUrl(), cacheOptions);
+  if (!response.ok) {
+    throw new Error(`Unable to fetch dynamic IRVE CSV: HTTP ${response.status}`);
+  }
+
+  if (!response.body) {
+    throw new Error("Unable to fetch dynamic IRVE CSV: missing response body");
+  }
+
   const dynamicMap = new Map<string, QualichargeEVSEDynamic>();
 
-  for (const row of rows) {
+  for await (const row of parseCsvRecordStream(response.body) as AsyncIterable<DynamicCsvRow>) {
     const dynamicRow = toDynamicRow(row);
     dynamicMap.set(getDynamicKey(dynamicRow.id_pdc_itinerance), dynamicRow);
   }

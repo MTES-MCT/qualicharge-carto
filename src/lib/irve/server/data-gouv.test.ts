@@ -1,29 +1,13 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { getDynamicParquetUrl, getStaticParquetUrl } from "./data-gouv";
+import { getDynamicCsvUrl, getStaticParquetUrl } from "./data-gouv";
 
 describe("data.gouv.fr parquet URL resolution", () => {
-  const previousStaticUrl = process.env.STATIC_PARQUET_URL;
-  const previousDynamicUrl = process.env.DYNAMIC_PARQUET_URL;
-
   afterEach(() => {
     vi.unstubAllGlobals();
-
-    if (previousStaticUrl == null) {
-      delete process.env.STATIC_PARQUET_URL;
-    } else {
-      process.env.STATIC_PARQUET_URL = previousStaticUrl;
-    }
-
-    if (previousDynamicUrl == null) {
-      delete process.env.DYNAMIC_PARQUET_URL;
-    } else {
-      process.env.DYNAMIC_PARQUET_URL = previousDynamicUrl;
-    }
   });
 
   it("reads the current parquet URL from resource metadata", async () => {
-    delete process.env.STATIC_PARQUET_URL;
     const fetchMock = vi.fn(async () => Response.json({
       extras: {
         "analysis:parsing:parquet_url": "https://hydra.example/parquet/static.parquet",
@@ -38,12 +22,38 @@ describe("data.gouv.fr parquet URL resolution", () => {
     );
   });
 
-  it("keeps explicit environment overrides first", async () => {
-    process.env.DYNAMIC_PARQUET_URL = "https://example.com/dynamic.parquet";
-    const fetchMock = vi.fn();
+  it("reads the current dynamic CSV URL from resource metadata", async () => {
+    const fetchMock = vi.fn(async () => Response.json({
+      latest: "https://www.data.gouv.fr/api/1/datasets/r/411443b1-6667-473f-8217-1c57c167408f",
+      extras: {
+        "analysis:parsing:parquet_url": "https://hydra.example/parquet/dynamic.parquet",
+      },
+    }));
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(getDynamicParquetUrl()).resolves.toBe("https://example.com/dynamic.parquet");
-    expect(fetchMock).not.toHaveBeenCalled();
+    await expect(getDynamicCsvUrl()).resolves.toBe(
+      "https://www.data.gouv.fr/api/1/datasets/r/411443b1-6667-473f-8217-1c57c167408f"
+    );
+  });
+
+  it("fails when the resource metadata has no parquet URL", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ extras: {} }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getStaticParquetUrl()).rejects.toThrow("missing analysis:parsing:parquet_url");
+  });
+
+  it("fails when the data.gouv.fr resource request fails", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getDynamicCsvUrl()).rejects.toThrow("HTTP 503");
+  });
+
+  it("fails when the dynamic resource metadata has no latest URL", async () => {
+    const fetchMock = vi.fn(async () => Response.json({ extras: {} }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(getDynamicCsvUrl()).rejects.toThrow("missing latest URL");
   });
 });

@@ -1,7 +1,3 @@
-export const FALLBACK_STATIC_PARQUET_URL =
-  "https://hydra.s3.rbx.io.cloud.ovh.net/parquet/8bb0a6e2-1016-42ba-aaee-f72f55c82e9f.parquet";
-export const FALLBACK_DYNAMIC_PARQUET_URL =
-  "https://hydra.s3.rbx.io.cloud.ovh.net/parquet/411443b1-6667-473f-8217-1c57c167408f.parquet";
 export const DATA_GOUV_DATASET_SLUG =
   "infrastructures-de-recharge-pour-vehicules-electriques-donnees-ouvertes";
 export const STATIC_PARQUET_RESOURCE_ID = "8bb0a6e2-1016-42ba-aaee-f72f55c82e9f";

@@ -22,8 +22,7 @@ The map data is served by the Next.js API route at `/api/irve/points`. The first
 
 The backend accepts these optional environment variables:
 
-- `STATIC_PARQUET_URL`: overrides the static IRVE Parquet URL. When unset, the backend resolves the current Parquet URL from the stable data.gouv.fr resource metadata.
-- `DYNAMIC_PARQUET_URL`: overrides the dynamic IRVE Parquet URL. When unset, the backend resolves the current Parquet URL from the stable data.gouv.fr resource metadata.
+Static IRVE Parquet and dynamic IRVE CSV URLs are resolved from the stable data.gouv.fr resource metadata.
 - `TARIFF_SOURCE_MODE`: tariff loading strategy. Defaults to `local-files`. Use `consolidated` to load the legacy single parquet URL.
 - `TARIFF_PARQUET_DIR`: local tariff parquet root directory. Defaults to `data/tariffs`.
   Each direct child folder is parsed as one provider and must contain `qualicharge_tariff.parquet` and `qualicharge_tariffpdc.parquet`, for example `data/tariffs/tesla/qualicharge_tariff.parquet`.
