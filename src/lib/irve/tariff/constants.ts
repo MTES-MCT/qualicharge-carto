@@ -5,7 +5,7 @@ export const COMPONENT_LABELS: Record<string, string> = {
   FLAT: "Forfait",
   PARKING_TIME: "Durée d’occupation hors charge",
   TIME: "Durée de recharge",
-  CONGESTION_TIME: "Durée de congestion",
+  CONGESTION_TIME: "Période de congestion",
   RESERVATION: "Réservation",
   RESERVATION_TIME: "Temps de réservation",
 };
