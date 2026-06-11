@@ -45,7 +45,7 @@ export function StationDetailsPanel({
   useEffect(() => {
     reset();
   }, [station, reset]);
-
+  const panelEyebrow = station?.nom_amenageur; 
   const panelTitle = station?.nom_station ?? previewStation?.nom_station ?? "Aucune station sélectionnée";
   // const panelTitle = station ? `${station?.nom_amenageur} / ${station.nom_station}` : "Aucune station sélectionnée";
   const panelSubtitle = station
@@ -74,7 +74,7 @@ export function StationDetailsPanel({
       className="z-1210!"
       isOpen={isOpen}
       onClose={onClose}
-      eyebrow="Station de recharge"
+      eyebrow={panelEyebrow}
       title={panelTitle}
       subtitle={panelSubtitle}
       labelledById="irve-sidepanel-title"
