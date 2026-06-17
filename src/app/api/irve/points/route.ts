@@ -58,7 +58,7 @@ export async function HEAD(request: Request) {
 
     return new Response(null, {
       status: context.isNotModified ? 304 : 200,
-      headers: context.isNotModified ? context.notModifiedHeaders : context.headers,
+      headers: context.notModifiedHeaders,
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to load IRVE data";
