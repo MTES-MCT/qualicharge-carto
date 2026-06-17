@@ -1,5 +1,6 @@
 import "server-only";
 
+import { createHash } from "node:crypto";
 import { brotliCompressSync, constants, gzipSync } from "node:zlib";
 
 import { loadIRVEDataset } from "@/lib/irve/server/dataset";
@@ -45,6 +46,14 @@ function getRefreshIntervalMs() {
   return getIRVEPointsRefreshIntervalSeconds() * 1000;
 }
 
+function createPointsETag(stations: IRVEPointsPayload["stations"], total: number) {
+  const hash = createHash("sha256")
+    .update(JSON.stringify({ stations, total }, jsonReplacer))
+    .digest("base64url");
+
+  return `W/"irve-points-${hash}"`;
+}
+
 async function refreshCache() {
   if (state.refreshPromise) {
     return state.refreshPromise;
@@ -62,7 +71,7 @@ async function refreshCache() {
       const response = {
         body,
         brotliBody: new ArrayBuffer(0),
-        etag: `W/"irve-points-${loadedAt}-${stations.length}"`,
+        etag: createPointsETag(stations, stations.length),
         gzipBody: new ArrayBuffer(0),
         loadedAt,
         total: stations.length,
