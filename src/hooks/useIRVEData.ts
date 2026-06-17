@@ -27,7 +27,6 @@ export function useIRVEData(): UseIRVEDataResult {
     async function loadPoints() {
       try {
         const response = await fetch(withBasePath("/api/irve/points/"), {
-          cache: "no-store",
           signal: controller.signal,
         });
 

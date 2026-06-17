@@ -12,6 +12,7 @@ const DEFAULT_REFRESH_INTERVAL_SECONDS = 300;
 interface CachedResponse {
   body: string;
   brotliBody: ArrayBuffer;
+  etag: string;
   gzipBody: ArrayBuffer;
   loadedAt: number;
   total: number;
@@ -34,11 +35,14 @@ function toArrayBuffer(buffer: Buffer): ArrayBuffer {
   return buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength) as ArrayBuffer;
 }
 
-function getRefreshIntervalMs() {
+export function getIRVEPointsRefreshIntervalSeconds() {
   const parsed = Number.parseInt(process.env.PARQUET_REFRESH_INTERVAL_SECONDS ?? "", 10);
-  const seconds = Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_REFRESH_INTERVAL_SECONDS;
 
-  return seconds * 1000;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_REFRESH_INTERVAL_SECONDS;
+}
+
+function getRefreshIntervalMs() {
+  return getIRVEPointsRefreshIntervalSeconds() * 1000;
 }
 
 async function refreshCache() {
@@ -58,6 +62,7 @@ async function refreshCache() {
       const response = {
         body,
         brotliBody: new ArrayBuffer(0),
+        etag: `W/"irve-points-${loadedAt}-${stations.length}"`,
         gzipBody: new ArrayBuffer(0),
         loadedAt,
         total: stations.length,
@@ -97,7 +102,11 @@ function ensureRefreshTimer() {
   state.timer.unref?.();
 }
 
-export async function getCachedIRVEPointsResponse() {
+interface GetCachedIRVEPointsResponseOptions {
+  refreshStale?: boolean;
+}
+
+export async function getCachedIRVEPointsResponse(options: GetCachedIRVEPointsResponseOptions = {}) {
   ensureRefreshTimer();
 
   if (!state.response) {
@@ -105,6 +114,14 @@ export async function getCachedIRVEPointsResponse() {
   }
 
   if (Date.now() - state.response.loadedAt >= getRefreshIntervalMs()) {
+    if (options.refreshStale) {
+      return refreshCache().catch((error: unknown) => {
+        console.error("Failed to refresh stale IRVE points cache", error);
+
+        return state.response as CachedResponse;
+      });
+    }
+
     void refreshCache().catch((error: unknown) => {
       console.error("Failed to refresh stale IRVE points cache", error);
     });
