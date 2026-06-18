@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { BBox } from "geojson";
 import type SuperclusterType from "supercluster";
 import Supercluster from "supercluster";
@@ -75,7 +75,7 @@ export function useMapClusters(stations: IRVEMapStation[]) {
     setZoom(mapRef.current.getZoom());
   }, [index]);
 
-  const updateView = () => {
+  const updateView = useCallback(() => {
     const map = mapRef.current;
     if (!map) return;
 
@@ -90,7 +90,7 @@ export function useMapClusters(stations: IRVEMapStation[]) {
 
     setBounds((prev) => (areBoundsEqual(prev, nextBBox) ? prev : nextBBox));
     setZoom((prev) => (prev === nextZoom ? prev : nextZoom));
-  };
+  }, []);
 
   return { clusters, supercluster: index, mapRef, zoom, updateView };
 }

@@ -5,7 +5,7 @@ import { useMap, useMapEvents } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
 
 export interface MapEventsProps {
-  onViewChange: () => void;
+  onViewChange: (map: LeafletMap) => void;
   onMapReady: (map: LeafletMap) => void;
 }
 
@@ -14,12 +14,11 @@ export function MapEvents({ onViewChange, onMapReady }: MapEventsProps) {
 
   useEffect(() => {
     onMapReady(map);
-    onViewChange();
-  }, [map, onMapReady, onViewChange]);
+  }, [map, onMapReady]);
 
   useMapEvents({
-    moveend: onViewChange,
-    zoomend: onViewChange,
+    moveend: () => onViewChange(map),
+    zoomend: () => onViewChange(map),
   });
 
   return null;

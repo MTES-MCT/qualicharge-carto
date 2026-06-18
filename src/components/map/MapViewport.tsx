@@ -15,6 +15,10 @@ import {
   isHeatmapDisplayMode,
   type MapDisplayMode,
 } from "@/lib/irve/mapModes";
+import {
+  parseMapViewportHash,
+  replaceMapViewportHash,
+} from "@/lib/irve/mapViewportHash";
 import type { IRVEMapStation } from "@/types/irve-runtime";
 import { ClusterLayer } from "./ClusterLayer";
 import { HeatmapLayer } from "./HeatmapLayer";
@@ -22,6 +26,20 @@ import { MapEvents } from "./MapEvents";
 
 const FRANCE_CENTER: [number, number] = [46.6, 2.3];
 const INITIAL_ZOOM = 6;
+
+function getInitialViewport() {
+  if (typeof window === "undefined") {
+    return {
+      center: FRANCE_CENTER,
+      zoom: INITIAL_ZOOM,
+    };
+  }
+
+  return parseMapViewportHash(window.location.hash) ?? {
+    center: FRANCE_CENTER,
+    zoom: INITIAL_ZOOM,
+  };
+}
 
 interface MapViewportProps {
   stations: IRVEMapStation[];
@@ -39,6 +57,7 @@ export function MapViewport({
   onStationSelect,
 }: MapViewportProps) {
   const { clusters, supercluster, mapRef, updateView } = useMapClusters(stations);
+  const initialViewport = useMemo(() => getInitialViewport(), []);
 
   const activeHeatmapMode = isHeatmapDisplayMode(mode) ? mode : null;
   const activeHeatmap = useMemo(
@@ -72,10 +91,23 @@ export function MapViewport({
     [mapRef, updateView]
   );
 
+  const handleMapViewEnd = useCallback(
+    (map: LeafletMap) => {
+      updateView();
+
+      const center = map.getCenter();
+      replaceMapViewportHash({
+        center: [center.lat, center.lng],
+        zoom: map.getZoom(),
+      });
+    },
+    [updateView]
+  );
+
   return (
     <MapContainer
-      center={FRANCE_CENTER}
-      zoom={INITIAL_ZOOM}
+      center={initialViewport.center}
+      zoom={initialViewport.zoom}
       style={{ height: "100%", width: "100%" }}
       preferCanvas
       zoomAnimation
@@ -112,7 +144,7 @@ export function MapViewport({
         keepBuffer={4}
       />
 
-      <MapEvents onViewChange={updateView} onMapReady={handleMapReady} />
+      <MapEvents onViewChange={handleMapViewEnd} onMapReady={handleMapReady} />
 
       {activeHeatmapMode === null ? (
         <ClusterLayer
