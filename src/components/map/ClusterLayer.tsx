@@ -60,7 +60,7 @@ function getPointPowerLabel(power: number | null | undefined) {
 
 function getPointPlugsLabel(available: number, total: number | null | undefined) {
   if (!total) return "-/- PDC";
-  return `${available}/${total}`;
+  return `${total - available}/${total}`;
   // return `${available}/${total} PDC`;
 }
 
@@ -95,9 +95,9 @@ function getPricingTone(dimension: string | null | undefined): PowerTone {
 function getPricingTypeLabel(dimension: string | null | undefined) {
   switch (dimension) {
     case "ENERGY":
-      return "/kWh";
+      return "par kWh";
     case "TIME":
-      return "/h";
+      return "par heure";
     case "FLAT":
       return "forfait";
     default:
