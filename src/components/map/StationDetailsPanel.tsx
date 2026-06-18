@@ -16,7 +16,8 @@ import { StationConnectorsTab } from "./tabs/StationConnectorsTab";
 import { StationDetailsTab } from "./tabs/StationDetailsTab";
 import { StationEssentialTab } from "./tabs/StationEssentialTab";
 import { StationPricingTab } from "./tabs/StationPricingTab";
-import { getConnectorStatusItems, type StationTabId } from "./tabs/shared";
+import { getConnectorStatusItems, type StationTabId } from "./tabs/shared";2
+
 
 export interface StationDetailsPanelProps {
   station: QualichargeEVSEConsolidated | null;
@@ -45,9 +46,9 @@ export function StationDetailsPanel({
   useEffect(() => {
     reset();
   }, [station, reset]);
-  const panelEyebrow = station?.nom_amenageur; 
+  // const panelEyebrow = station?.nom_amenageur; 
   const panelTitle = station?.nom_station ?? previewStation?.nom_station ?? "Aucune station sélectionnée";
-  // const panelTitle = station ? `${station?.nom_amenageur} / ${station.nom_station}` : "Aucune station sélectionnée";
+  const panelEyebrow = station ? `${station?.nom_amenageur}` : "Aucune station sélectionnée";
   const panelSubtitle = station
     ? station.adresse_station
     : isLoading
@@ -56,6 +57,8 @@ export function StationDetailsPanel({
   const panoramaHref = panoramaPicture
     ? `https://api.panoramax.xyz/?focus=pic/${panoramaPicture.lat}/${panoramaPicture.lon}&pic=${panoramaPicture.id}`
     : null;
+
+  const panelContacts = station?.contact_operateur
 
   const tabComponents: Record<StationTabId, React.ReactNode> = station
     ? {

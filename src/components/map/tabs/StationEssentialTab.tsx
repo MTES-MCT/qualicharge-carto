@@ -26,13 +26,10 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
         title="Vue d'ensemble"
         end={
           <div className="irve-sidepanel__hero">
-            <p>
-              <b>Aménageur: </b>{station.nom_amenageur}
-            </p>
             <ul className="fr-badges-group">
               <li>
                 <Badge severity={getPowerSeverity(station.summary.max_power)}>
-                  {station.summary.max_power} kW max par PDC
+                  {station.summary.max_power} kW maximum
                 </Badge>
               </li>
               <li>
