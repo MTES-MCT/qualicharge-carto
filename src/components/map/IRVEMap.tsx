@@ -25,6 +25,7 @@ import { MapAnalysisPanel } from "./MapAnalysisPanel";
 import { MapFiltersPanel } from "./MapFiltersPanel";
 import { MapViewport } from "./MapViewport";
 import { StationDetailsPanel } from "./StationDetailsPanel";
+import { LaunchInfoModal } from "../LaunchInfoModal";
 import { PricingModal, pricingModal } from "../PricingModal";
 
 import "leaflet/dist/leaflet.css";
@@ -274,6 +275,7 @@ export default function IRVEMap() {
 
       <LoadingOverlay loadState={loadState} />
 
+      <LaunchInfoModal />
       <PricingModal />
     </div>
   );
