@@ -48,8 +48,8 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
       {sortedTariffs.length === 0 ? (
         <Notice
           severity="info"
-          title="Aucun tarif applicable"
-          description="Aucun tarif courant n’est associé aux points de charge de cette station."
+          title="Tarif inconnu"
+          description="La tarif applicable à cette station n'a pas été transmis par son opérateur."
         />
       ) : null}
 

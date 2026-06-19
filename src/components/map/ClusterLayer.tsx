@@ -55,7 +55,6 @@ function getClusterClassName(count: number) {
 function getPointPowerLabel(power: number | null | undefined) {
   if (!power) return "-";
   return `${power}`;
-  // return `${power} kW`;
 }
 
 function getPointPlugsLabel(available: number, total: number | null | undefined) {
@@ -126,7 +125,7 @@ const markerContentBuilders: Record<MarkerDisplayMode, MarkerContentBuilder> = {
     const topLabel =
       station.summary.pricing_status === "FREE"
         ? "Gratuit"
-        : getCompactPricingHeadline(station.summary.pricing_headline) ?? "Tarif ?";
+        : getCompactPricingHeadline(station.summary.pricing_headline) ?? "-";
 
     return {
       primaryLabel: topLabel,
