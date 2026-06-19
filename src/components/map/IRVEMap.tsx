@@ -152,7 +152,7 @@ export default function IRVEMap() {
             hideLegend
             segments={[
               {
-                label: "Puissance disponible",
+                label: "Disponibilité",
                 iconId: "fr-icon-road-map-line",
                 nativeInputProps: {
                   checked: mapDisplayMode === "markers",

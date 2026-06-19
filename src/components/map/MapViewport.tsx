@@ -106,7 +106,7 @@ export function MapViewport({
       </div>
 
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> | <a href="https://www.qualicharge.beta.gouv.fr/">Qualicharge</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         maxZoom={19}
         keepBuffer={4}
