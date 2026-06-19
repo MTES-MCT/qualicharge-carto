@@ -10,6 +10,7 @@ interface MapSidePanelProps {
   title: string;
   subtitle?: string;
   eyebrow?: string;
+  stationContact?: string;
   children: ReactNode;
   className?: string;
   contentClassName?: string;
@@ -26,6 +27,7 @@ export function MapSidePanel({
   title,
   subtitle,
   eyebrow,
+  stationContact,
   children,
   className = "",
   contentClassName = "",
@@ -88,6 +90,11 @@ export function MapSidePanel({
               {subtitle ? (
                 <p className="m-0! text-[0.8rem]! leading-snug text-slate-600">
                   {subtitle}
+                </p>
+              ) : null}
+              {stationContact ? (
+                <p className="m-0! text-[0.8rem]! leading-snug text-slate-600">
+                  {stationContact}
                 </p>
               ) : null}
             </div>

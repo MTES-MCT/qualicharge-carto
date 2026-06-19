@@ -80,6 +80,7 @@ export function StationDetailsPanel({
       eyebrow={panelEyebrow}
       title={panelTitle}
       subtitle={panelSubtitle}
+      stationContact={panelContacts}
       labelledById="irve-sidepanel-title"
       headerPicture={panoramaPicture?.imageUrl}
       headerPictureHref={panoramaHref}
