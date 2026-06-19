@@ -21,7 +21,7 @@ export function PricingModal() {
       ]}
     >
       <p>
-        Nous n&apos;affichons que les tarifs des opérateurs qui les transmettent à la Direction générale de l'énergie et du climat. Ces tarifs peuvent avoir plusieurs composantes (énergie, forfait, frais d'occupation post recharge, etc...) accessibles en cliquant sur la station. Les tarifs affichés sont ceux qui s'appliquent lors d'un paiement direct en station, ils peuvent varier en cas de souscription à un abonnement.  
+        Nous n&apos;affichons que les tarifs des opérateurs qui les transmettent à la Direction générale de l&apos;énergie et du climat. Ces tarifs peuvent avoir plusieurs composantes (énergie, forfait, frais d&apos;occupation post recharge, etc...) accessibles en cliquant sur la station. Les tarifs affichés sont ceux qui s&apos;appliquent lors d&apos;un paiement direct en station, ils peuvent varier en cas de souscription à un abonnement.
       </p>
     </pricingModal.Component>
   );
