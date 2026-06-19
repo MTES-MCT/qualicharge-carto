@@ -104,7 +104,7 @@ export function MapAnalysisPanel({
 
       {isPricingMode ? (
         <ToggleSwitch
-          helperText="Conserve uniquement les stations pour lesquelles un prix exploitable a ete detecte."
+          helperText="Conserve uniquement les stations pour lesquelles un prix exploitable a été détecté."
           inputTitle="Afficher uniquement les stations avec prix"
           label="Stations avec prix seulement"
           labelPosition="left"
