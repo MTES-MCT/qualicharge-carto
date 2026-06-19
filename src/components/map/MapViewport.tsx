@@ -22,6 +22,7 @@ import {
 import type { IRVEMapStation } from "@/types/irve-runtime";
 import { ClusterLayer } from "./ClusterLayer";
 import { HeatmapLayer } from "./HeatmapLayer";
+import { MapAddressSearch } from "./MapAddressSearch";
 import { MapEvents } from "./MapEvents";
 
 const FRANCE_CENTER: [number, number] = [46.6, 2.3];
@@ -82,6 +83,9 @@ export function MapViewport({
   const zoomPanelOffsetClass = isPanelOpen
     ? "md:left-[calc(var(--irve-map-panel-width)+1.5rem)]"
     : "md:left-4";
+  const searchPanelOffsetClass = isPanelOpen
+    ? "is-panel-open"
+    : "";
 
   const handleMapReady = useCallback(
     (map: LeafletMap) => {
@@ -105,17 +109,23 @@ export function MapViewport({
   );
 
   return (
-    <MapContainer
-      center={initialViewport.center}
-      zoom={initialViewport.zoom}
-      style={{ height: "100%", width: "100%" }}
-      preferCanvas
-      zoomAnimation
-      markerZoomAnimation
-      fadeAnimation
-      zoomControl={false}
-      attributionControl
-    >
+    <>
+      <MapAddressSearch
+        className={searchPanelOffsetClass}
+        mapRef={mapRef}
+      />
+
+      <MapContainer
+        center={initialViewport.center}
+        zoom={initialViewport.zoom}
+        style={{ height: "100%", width: "100%" }}
+        preferCanvas
+        zoomAnimation
+        markerZoomAnimation
+        fadeAnimation
+        zoomControl={false}
+        attributionControl
+      >
       <div className={`pointer-events-none absolute left-4 top-4 z-[1000] transition-[left] duration-[280ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] md:top-4 ${zoomPanelOffsetClass}`}>
         <div className="pointer-events-auto flex flex-col gap-2">
           <div className="bg-white">
@@ -161,6 +171,7 @@ export function MapViewport({
           blur={activeHeatmap?.blur}
         />
       )}
-    </MapContainer>
+      </MapContainer>
+    </>
   );
 }
