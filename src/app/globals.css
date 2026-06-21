@@ -815,14 +815,20 @@ body {
 
 @media (max-width: 960px) {
   .irve-map-toolbar-shell {
-    top: 0.75rem;
+    top: auto;
     right: auto;
-    bottom: auto;
+    bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
     left: 50%;
     width: max-content;
     max-width: calc(100vw - 1.5rem);
     transform: translateX(-50%);
     justify-content: center;
+  }
+
+  .irve-map-zoom-controls {
+    top: auto;
+    bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+    left: 0.75rem;
   }
 
   .irve-map-toolbar-panel {
@@ -901,7 +907,7 @@ body {
   }
 
   .irve-map-address-search {
-    top: 5rem;
+    top: 0.75rem;
     right: auto;
     left: 50%;
     width: min(28rem, calc(100vw - 1.5rem));

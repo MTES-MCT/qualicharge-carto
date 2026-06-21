@@ -126,7 +126,7 @@ export function MapViewport({
         zoomControl={false}
         attributionControl
       >
-      <div className={`pointer-events-none absolute left-4 top-4 z-[1000] transition-[left] duration-[280ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] md:top-4 ${zoomPanelOffsetClass}`}>
+      <div className={`irve-map-zoom-controls pointer-events-none absolute left-4 top-4 z-[1000] transition-[left] duration-[280ms] ease-[cubic-bezier(0.2,0.8,0.2,1)] md:top-4 ${zoomPanelOffsetClass}`}>
         <div className="pointer-events-auto flex flex-col gap-2">
           <div className="bg-white">
             <Button
