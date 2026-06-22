@@ -5,6 +5,69 @@ import type { QualichargeTariff } from "@/types/irve";
 import { getTariffDimensionGroups } from "./presentation";
 
 describe("tariff presentation", () => {
+  it("keeps restrictions when equal prices describe different tariff cases", () => {
+    const tariff: QualichargeTariff = {
+      id: "tariff-1",
+      raw: "",
+      id_pdc_itinerance: ["pdc-1"],
+      parsed: {
+        id: "tariff-1",
+        currency: "EUR",
+        tax_included: "YES",
+        elements: [
+          { price_components: [{ type: "ENERGY", price: 0.39 }] },
+          {
+            restrictions: { min_duration: 15 * 60 },
+            price_components: [{ type: "PARKING_TIME", price: 12 }],
+          },
+        ],
+      },
+    };
+
+    const groups = getTariffDimensionGroups(tariff);
+
+    expect(groups).toMatchObject([
+      {
+        type: "ENERGY",
+        lines: [{ amount: "0,39 €/kWh", restrictions: [] }],
+      },
+      {
+        type: "PARKING_TIME",
+        lines: [{ amount: "12 €/h", restrictions: ["si la durée est supérieure à 15 min"] }],
+      },
+    ]);
+  });
+
+  it("does not collapse equal prices with different restrictions", () => {
+    const tariff: QualichargeTariff = {
+      id: "tariff-1",
+      raw: "",
+      id_pdc_itinerance: ["pdc-1"],
+      parsed: {
+        id: "tariff-1",
+        currency: "EUR",
+        tax_included: "YES",
+        elements: [
+          {
+            restrictions: { min_duration: 15 * 60 },
+            price_components: [{ type: "PARKING_TIME", price: 12 }],
+          },
+          {
+            restrictions: { min_duration: 30 * 60 },
+            price_components: [{ type: "PARKING_TIME", price: 12 }],
+          },
+        ],
+      },
+    };
+
+    const [parkingGroup] = getTariffDimensionGroups(tariff);
+
+    expect(parkingGroup.lines).toEqual([
+      { amount: "12 €/h", restrictions: ["si la durée est supérieure à 15 min"] },
+      { amount: "12 €/h", restrictions: ["si la durée est supérieure à 30 min"] },
+    ]);
+  });
+
   it("sorts default lines after restricted lines", () => {
     const tariff: QualichargeTariff = {
       id: "tariff-1",

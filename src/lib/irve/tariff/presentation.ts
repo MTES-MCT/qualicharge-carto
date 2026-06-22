@@ -5,6 +5,12 @@ import { formatTariffComponent, getTariffComponentLabel } from "./formatting";
 import { getTariffRestrictionTexts } from "./restrictions";
 import type { TariffComponentLine, TariffDimensionGroup } from "./types";
 
+function getTariffComponentLineKey(amount: string, restrictions: string[]) {
+  // Mirrors the Python text renderer after its equal-price shortcut was disabled
+  // with `and False`: same price does not mean same tariff case.
+  return `${amount}|${restrictions.join("|")}`;
+}
+
 export function getTariffDimensionGroups(tariff: QualichargeTariff): TariffDimensionGroup[] {
   const groups = new Map<string, TariffComponentLine[]>();
   const seenLines = new Map<string, Set<string>>();
@@ -22,7 +28,7 @@ export function getTariffDimensionGroups(tariff: QualichargeTariff): TariffDimen
 
       const type = component.type ?? "UNKNOWN";
       const restrictions = getTariffRestrictionTexts(element.restrictions);
-      const lineKey = `${amount}|${restrictions.join("|")}`;
+      const lineKey = getTariffComponentLineKey(amount, restrictions);
       const seen = seenLines.get(type) ?? new Set<string>();
       if (seen.has(lineKey)) {
         continue;

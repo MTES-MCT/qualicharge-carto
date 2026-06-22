@@ -24,8 +24,10 @@ export function LaunchInfoModal() {
       <p>
         Cette cartographie présente les points de recharge de puissance supérieure à{" "}
         {MIN_DISPLAYED_POWER_KW} kW, c&apos;est à dire ceux permettant une recharge rapide
-        (environ 100 km d&apos;autonomie récupérée en vingt minutes). <br />
-        Les points de recharge lente ne sont pas affichés.
+        (plus de 100 km d&apos;autonomie récupérée en vingt minutes). <br />
+         Il s'agit d'une première version en cours d'enrichissement. Les données présentées sont progressivement complétées et mises à jour.<br />
+         Les points de recharge lente ne sont pas affichés. 
+
       </p>
     </launchInfoModal.Component>
   );
