@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import type { Map as LeafletMap } from "leaflet";
 import { Button } from "@codegouvfr/react-dsfr/Button";
@@ -27,6 +27,8 @@ import { MapEvents } from "./MapEvents";
 
 const FRANCE_CENTER: [number, number] = [46.6, 2.3];
 const INITIAL_ZOOM = 6;
+const VIEWPORT_POSITION_EPSILON = 0.00001;
+const VIEWPORT_ZOOM_EPSILON = 0.001;
 
 function getInitialViewport() {
   if (typeof window === "undefined") {
@@ -94,6 +96,42 @@ export function MapViewport({
     },
     [mapRef, updateView]
   );
+
+  const applyHashViewport = useCallback(() => {
+    const map = mapRef.current;
+    if (!map || typeof window === "undefined") {
+      return;
+    }
+
+    const nextViewport = parseMapViewportHash(window.location.hash);
+    if (!nextViewport) {
+      return;
+    }
+
+    const currentCenter = map.getCenter();
+    const [nextLat, nextLng] = nextViewport.center;
+    const isSameCenter =
+      Math.abs(currentCenter.lat - nextLat) < VIEWPORT_POSITION_EPSILON &&
+      Math.abs(currentCenter.lng - nextLng) < VIEWPORT_POSITION_EPSILON;
+    const isSameZoom =
+      Math.abs(map.getZoom() - nextViewport.zoom) < VIEWPORT_ZOOM_EPSILON;
+
+    if (isSameCenter && isSameZoom) {
+      return;
+    }
+
+    map.flyTo(nextViewport.center, nextViewport.zoom, {
+      animate: true,
+      duration: 0.8,
+    });
+  }, [mapRef]);
+
+  useEffect(() => {
+    window.addEventListener("hashchange", applyHashViewport);
+    return () => {
+      window.removeEventListener("hashchange", applyHashViewport);
+    };
+  }, [applyHashViewport]);
 
   const handleMapViewEnd = useCallback(
     (map: LeafletMap) => {
