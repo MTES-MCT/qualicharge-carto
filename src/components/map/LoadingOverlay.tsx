@@ -57,7 +57,7 @@ export function LoadingOverlay({ loadState }: LoadingOverlayProps) {
                   </p>
                 </div>
               </div>
-              <Badge severity="info">{loadState.loaded > 0 ? stationLabel : "Préparation des données"}</Badge>
+              <Badge noIcon severity="info">{loadState.loaded > 0 ? stationLabel : "Préparation des données"}</Badge>
             </div>
           }
         />

@@ -67,7 +67,7 @@ function ConnectorAccordion({
             </div>
           </div>
 
-          <Badge severity={availableCount > 0 ? "success" : "warning"} small>
+          <Badge noIcon severity={availableCount > 0 ? "success" : "warning"} small>
             {availableCount} / {totalCount} PDC libres
           </Badge>
         </div>
@@ -100,10 +100,10 @@ function ConnectorAccordion({
                 </div>
 
                 <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Badge small severity={getConnectorStateSeverity(pdc.connectorStatus)}>
+                  <Badge noIcon small severity={getConnectorStateSeverity(pdc.connectorStatus)}>
                     {getEtatPriseLabel(pdc.connectorStatus)}
                   </Badge>
-                  <Badge small severity={getOccupationSeverity(pdc.occupationStatus ?? undefined)}>
+                  <Badge noIcon small severity={getOccupationSeverity(pdc.occupationStatus ?? undefined)}>
                     {getOccupationLabel(pdc.occupationStatus)}
                   </Badge>
                 </div>

@@ -28,15 +28,15 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
           <div className="irve-sidepanel__hero">
             <ul className="fr-badges-group">
               <li>
-                <Badge severity={getPowerSeverity(station.summary.max_power)}>
+                <Badge noIcon severity={getPowerSeverity(station.summary.max_power)}>
                   {station.summary.max_power} kW maximum
                 </Badge>
               </li>
               <li>
-                <Badge severity="new">{station.pdcs.length} PDC</Badge>
+                <Badge noIcon severity="new">{station.pdcs.length} PDC</Badge>
               </li>
               <li>
-                <Badge severity={getAccessSeverity(station.condition_acces)}>
+                <Badge noIcon severity={getAccessSeverity(station.condition_acces)}>
                   {station.condition_acces}
                 </Badge>
               </li>
@@ -81,14 +81,14 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
             <div>
               <p className="irve-sidepanel__label">État de la station</p>
               <div className="irve-sidepanel__tags irve-sidepanel__tags--compact">
-                <Badge severity={dynamicSummary.enServiceCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "warning" : "new"}>
+                <Badge noIcon severity={dynamicSummary.enServiceCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "warning" : "new"}>
                   {dynamicSummary.enServiceCount}/{station.pdcs.length} en service
                 </Badge>
-                <Badge severity={dynamicSummary.libreCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "info" : "new"}>
+                <Badge noIcon severity={dynamicSummary.libreCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "info" : "new"}>
                   {dynamicSummary.libreCount} libre{dynamicSummary.libreCount > 1 ? "s" : ""}
                 </Badge>
-                {dynamicSummary.occupiedCount > 0 ? <Badge severity="warning">{dynamicSummary.occupiedCount} occupé{dynamicSummary.occupiedCount > 1 ? "s" : ""}</Badge> : null}
-                {dynamicSummary.reservedCount > 0 ? <Badge severity="info">{dynamicSummary.reservedCount} réservé{dynamicSummary.reservedCount > 1 ? "s" : ""}</Badge> : null}
+                {dynamicSummary.occupiedCount > 0 ? <Badge noIcon severity="warning">{dynamicSummary.occupiedCount} occupé{dynamicSummary.occupiedCount > 1 ? "s" : ""}</Badge> : null}
+                {dynamicSummary.reservedCount > 0 ? <Badge noIcon severity="info">{dynamicSummary.reservedCount} réservé{dynamicSummary.reservedCount > 1 ? "s" : ""}</Badge> : null}
               </div>
             </div>
 
@@ -104,7 +104,7 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
 
             <div>
               <p className="irve-sidepanel__label">Fiabilité de la donnée</p>
-              <Badge severity={getAvailabilityTone(dynamicSummary.latestDynamic?.etat_pdc)}>
+              <Badge noIcon severity={getAvailabilityTone(dynamicSummary.latestDynamic?.etat_pdc)}>
                 {dynamicSummary.pdcsWithDynamicCount > 0
                   ? `${dynamicSummary.pdcsWithDynamicCount}/${station.pdcs.length} PDC avec données dynamiques`
                   : "Données dynamiques absentes"}
