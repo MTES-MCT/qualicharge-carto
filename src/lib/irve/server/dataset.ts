@@ -3,6 +3,7 @@ import "server-only";
 import { MIN_DISPLAYED_POWER_KW, ROW_BATCH_SIZE } from "./config";
 import { getStaticParquetUrl } from "./data-gouv";
 import { getParquetRowCount, readParquetRowBatch, readRemoteParquetBuffer } from "./parquet";
+import { hasRecentDynamicStatus } from "./stations/activity";
 import { consolidateStation, createMapStation, getDynamicSummary, getStationKey } from "./stations/consolidate";
 import { getDynamicKey, loadDynamicRows } from "./stations/dynamic-rows";
 import { toStaticRow, type StaticParquetRow } from "./stations/static-row";
@@ -54,6 +55,10 @@ export async function loadIRVEDataset() {
   let nextId = 1;
 
   for (const [stationKey, stationPdcs] of stationMap) {
+    if (!hasRecentDynamicStatus(stationPdcs, now)) {
+      continue;
+    }
+
     const station = consolidateStation(stationPdcs, now);
     if (!station) {
       continue;
