@@ -9,9 +9,11 @@ import type SuperclusterType from "supercluster";
 import type { IRVEClusterOrPoint, IRVEMapStation, IRVEPointProperties } from "@/types/irve-runtime";
 import { isClusterFeature } from "@/hooks/useMapClusters";
 import type { MarkerDisplayMode } from "@/lib/irve/mapModes";
+import { getStationRecencyRanks } from "@/lib/irve/markerOrder";
 
 const clusterIconCache = new Map<number, L.DivIcon>();
 const pointIconCache = new Map<string, DivIcon>();
+const MARKER_Z_INDEX_STEP = 1_000;
 interface MarkerVisualContent {
   primaryLabel: string;
   secondaryLabel: string;
@@ -200,6 +202,12 @@ export function ClusterLayer({
   const getMarkerContent = markerContentBuilders[displayMode];
 
   const elements = useMemo(() => {
+    const pointStations = clusters.flatMap((feature) =>
+      isClusterFeature(feature) ? [] : [feature.properties.row]
+    );
+    const recencyRanks = getStationRecencyRanks(pointStations);
+    const selectedMarkerZIndex = (pointStations.length + 1) * MARKER_Z_INDEX_STEP;
+
     return clusters.map((feature) => {
       const [lng, lat] = feature.geometry.coordinates;
 
@@ -237,6 +245,7 @@ export function ClusterLayer({
       const p = feature.properties.row;
       const isSelected = p.station_key === selectedStationId;
       const markerContent = getMarkerContent(p);
+      const recencyZIndex = (recencyRanks.get(p.station_key) ?? 0) * MARKER_Z_INDEX_STEP;
 
       return (
         <Marker
@@ -250,7 +259,7 @@ export function ClusterLayer({
             markerContent.primaryTextColor,
             markerContent.secondaryTextColor,
           )}
-          zIndexOffset={isSelected ? 2000 : 0}
+          zIndexOffset={isSelected ? selectedMarkerZIndex : recencyZIndex}
           eventHandlers={{
             click: () => {
               const panelWidth = window.innerWidth >= 768 ? Math.min(608, window.innerWidth) : 0;

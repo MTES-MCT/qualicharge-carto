@@ -4,6 +4,7 @@ import type { QualichargeEVSEConsolidated, QualichargeEVSEPdc } from "@/types/ir
 import type { IRVEMapStation, IRVEMapStationDynamicSummary } from "@/types/irve-runtime";
 
 import { toNumber, toRequiredString } from "../coerce";
+import { getLatestDynamicStatusTimestamp } from "./activity";
 
 export function getStationKey(idStationItinerance?: string, fallback?: string) {
   return toRequiredString(idStationItinerance) || toRequiredString(fallback);
@@ -31,6 +32,7 @@ export function getDynamicSummary(pdcs: QualichargeEVSEPdc[]): IRVEMapStationDyn
     occupied_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.OCCUPE).length,
     reserved_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.RESERVE).length,
     available_count: pdcsWithDynamic.filter(isAvailablePdc).length,
+    latest_status_timestamp: getLatestDynamicStatusTimestamp(pdcsWithDynamic),
   };
 }
 

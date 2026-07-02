@@ -25,6 +25,7 @@ export interface IRVEMapStationDynamicSummary {
   occupied_count: number;
   reserved_count: number;
   available_count: number;
+  latest_status_timestamp: number | null;
 }
 
 export interface IRVEMapStation {
