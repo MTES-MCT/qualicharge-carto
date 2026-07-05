@@ -116,7 +116,10 @@ const markerContentBuilders: Record<MarkerDisplayMode, MarkerContentBuilder> = {
 
     return {
       primaryLabel: getPointPowerLabel(station.summary.max_power),
-      secondaryLabel: getPointPlugsLabel(station.dynamic_summary.available_count, station.pdc_count),
+      secondaryLabel: getPointPlugsLabel(
+        station.dynamic_summary.available_count,
+        station.dynamic_summary.pdcs_with_dynamic_count
+      ),
       toneColor: tone.bg,
       primaryTextColor: tone.text,
       secondaryTextColor: "#334155",

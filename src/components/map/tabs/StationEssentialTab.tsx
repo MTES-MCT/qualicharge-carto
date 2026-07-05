@@ -82,13 +82,14 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
               <p className="irve-sidepanel__label">État de la station</p>
               <div className="irve-sidepanel__tags irve-sidepanel__tags--compact">
                 <Badge noIcon severity={dynamicSummary.enServiceCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "warning" : "new"}>
-                  {dynamicSummary.enServiceCount}/{station.pdcs.length} en service
+                  {dynamicSummary.enServiceCount}/{dynamicSummary.pdcsWithDynamicCount} en service
                 </Badge>
                 <Badge noIcon severity={dynamicSummary.libreCount > 0 ? "success" : dynamicSummary.pdcsWithDynamicCount > 0 ? "info" : "new"}>
                   {dynamicSummary.libreCount} libre{dynamicSummary.libreCount > 1 ? "s" : ""}
                 </Badge>
                 {dynamicSummary.occupiedCount > 0 ? <Badge noIcon severity="warning">{dynamicSummary.occupiedCount} occupé{dynamicSummary.occupiedCount > 1 ? "s" : ""}</Badge> : null}
                 {dynamicSummary.reservedCount > 0 ? <Badge noIcon severity="info">{dynamicSummary.reservedCount} réservé{dynamicSummary.reservedCount > 1 ? "s" : ""}</Badge> : null}
+                {dynamicSummary.unknownOccupationCount > 0 ? <Badge noIcon severity="new">{dynamicSummary.unknownOccupationCount} occupation{dynamicSummary.unknownOccupationCount > 1 ? "s" : ""} inconnue{dynamicSummary.unknownOccupationCount > 1 ? "s" : ""}</Badge> : null}
               </div>
             </div>
 
@@ -106,12 +107,12 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
               <p className="irve-sidepanel__label">Fiabilité de la donnée</p>
               <Badge noIcon severity={getAvailabilityTone(dynamicSummary.latestDynamic?.etat_pdc)}>
                 {dynamicSummary.pdcsWithDynamicCount > 0
-                  ? `${dynamicSummary.pdcsWithDynamicCount}/${station.pdcs.length} PDC avec données dynamiques`
+                  ? `${dynamicSummary.pdcsWithDynamicCount}/${station.pdcs.length} PDC avec données dynamiques récentes`
                   : "Données dynamiques absentes"}
               </Badge>
               {dynamicSummary.pdcsWithDynamicCount === 0 ? (
                 <p className="irve-sidepanel__missing irve-sidepanel__missing--spaced">
-                  Cette station n&apos;a pas de remontée dynamique exploitable dans le jeu de données actuel.
+                  Cette station n&apos;a pas de remontée dynamique récente exploitable dans le jeu de données actuel.
                 </p>
               ) : null}
             </div>

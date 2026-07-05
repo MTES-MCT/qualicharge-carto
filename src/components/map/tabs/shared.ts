@@ -1,6 +1,7 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { withBasePath } from "@/lib/base-path";
+import { getRecentDynamicStatus } from "@/lib/irve/dynamic-status";
 import type { DetailSection, DetailItem } from "@/lib/irve/sections";
 import {
   EtatPriseEnum,
@@ -107,13 +108,18 @@ export function resolveDisplayValue(item: DetailItem): string {
 }
 
 export function getConnectorStatusItems(station: QualichargeEVSEConsolidated): ConnectorStatusItem[] {
+  const at = new Date();
+
   function buildConnectorStatusItem(config: {
     label: string;
     iconPath: string;
     predicate: (pdc: QualichargeEVSEPdc) => boolean;
     getConnectorStatus: (pdc: QualichargeEVSEPdc) => EtatPriseEnum | null | undefined;
   }): ConnectorStatusItem[] {
-    const matchingPdcs = station.pdcs.filter(config.predicate);
+    const matchingPdcs = station.pdcs.filter(config.predicate).map((pdc) => ({
+      ...pdc,
+      dynamic: getRecentDynamicStatus(pdc, at),
+    }));
 
     if (matchingPdcs.length === 0) {
       return [];

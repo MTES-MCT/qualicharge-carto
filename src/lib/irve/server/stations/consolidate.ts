@@ -1,38 +1,28 @@
 import { getStationMarkerPricing } from "@/lib/irve/tariffs";
-import { EtatPDCEnum, OccupationPDCEnum } from "@/types/irve";
 import type { QualichargeEVSEConsolidated, QualichargeEVSEPdc } from "@/types/irve";
 import type { IRVEMapStation, IRVEMapStationDynamicSummary } from "@/types/irve-runtime";
+import { summarizeRecentDynamicPdcs } from "@/lib/irve/dynamic-status";
 
 import { toNumber, toRequiredString } from "../coerce";
-import { getLatestDynamicStatusTimestamp } from "./activity";
 
 export function getStationKey(idStationItinerance?: string, fallback?: string) {
   return toRequiredString(idStationItinerance) || toRequiredString(fallback);
 }
 
-function isAvailablePdc(pdc: QualichargeEVSEPdc) {
-  if (pdc.dynamic?.occupation_pdc !== OccupationPDCEnum.LIBRE) {
-    return false;
-  }
-
-  if (pdc.dynamic?.etat_pdc == null) {
-    return true;
-  }
-
-  return pdc.dynamic.etat_pdc === EtatPDCEnum.EN_SERVICE;
-}
-
-export function getDynamicSummary(pdcs: QualichargeEVSEPdc[]): IRVEMapStationDynamicSummary {
-  const pdcsWithDynamic = pdcs.filter((pdc) => pdc.dynamic);
+export function getDynamicSummary(pdcs: QualichargeEVSEPdc[], at: Date): IRVEMapStationDynamicSummary {
+  const summary = summarizeRecentDynamicPdcs(pdcs, at);
 
   return {
-    pdcs_with_dynamic_count: pdcsWithDynamic.length,
-    en_service_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.etat_pdc === EtatPDCEnum.EN_SERVICE).length,
-    libre_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.LIBRE).length,
-    occupied_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.OCCUPE).length,
-    reserved_count: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.RESERVE).length,
-    available_count: pdcsWithDynamic.filter(isAvailablePdc).length,
-    latest_status_timestamp: getLatestDynamicStatusTimestamp(pdcsWithDynamic),
+    pdcs_with_dynamic_count: summary.pdcsWithDynamicCount,
+    en_service_count: summary.enServiceCount,
+    libre_count: summary.libreCount,
+    occupied_count: summary.occupiedCount,
+    reserved_count: summary.reservedCount,
+    unknown_occupation_count: summary.unknownOccupationCount,
+    available_count: summary.availableCount,
+    latest_status_timestamp: summary.latestDynamic
+      ? Date.parse(summary.latestDynamic.horodatage)
+      : null,
   };
 }
 

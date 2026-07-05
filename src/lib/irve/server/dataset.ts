@@ -66,7 +66,7 @@ export async function loadIRVEDataset() {
 
     stationsByKey.set(stationKey, station);
 
-    const mapStation = createMapStation(stationKey, station, getDynamicSummary(station.pdcs), nextId);
+    const mapStation = createMapStation(stationKey, station, getDynamicSummary(station.pdcs, now), nextId);
     nextId += 1;
     if (mapStation) {
       stations.push(mapStation);
