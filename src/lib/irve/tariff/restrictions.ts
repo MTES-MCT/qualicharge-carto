@@ -235,7 +235,7 @@ export function getTariffRestrictionTexts(restrictions?: Record<string, unknown>
   const startTime = formatTimeRestriction(restrictions.start_time);
   const endTime = formatTimeRestriction(restrictions.end_time);
 
-  if (days && days.length > 0) parts.push(`les ${days.map((day) => `${day}s`).join(", ")}`);
+  if (days && days.length > 0 && days.length < 7) parts.push(`les ${days.map((day) => `${day}s`).join(", ")}`);
   if (startDate && endDate) parts.push(`du ${startDate} au ${endDate}`);
   else if (startDate) parts.push(`après le ${startDate}`);
   else if (endDate) parts.push(`avant le ${endDate}`);
