@@ -1,4 +1,7 @@
-import { ACTIVE_STATION_MAX_STATUS_AGE_DAYS } from "./server/config";
+import {
+  ACTIVE_STATION_MAX_STATUS_AGE_DAYS,
+  DYNAMIC_STATUS_FRESHNESS_MAX_AGE_HOURS,
+} from "./server/config";
 import {
   EtatPDCEnum,
   OccupationPDCEnum,
@@ -7,12 +10,28 @@ import {
 } from "@/types/irve";
 
 const DAY_IN_MS = 24 * 60 * 60 * 1000;
+const HOUR_IN_MS = 60 * 60 * 1000;
+
+function isDynamicStatusWithinAge(
+  dynamic: QualichargeEVSEDynamic | undefined,
+  at: Date,
+  maxAgeMs: number
+) {
+  const timestamp = Date.parse(dynamic?.horodatage ?? "");
+
+  return Number.isFinite(timestamp) && timestamp > at.getTime() - maxAgeMs;
+}
 
 export function isRecentDynamicStatus(dynamic: QualichargeEVSEDynamic | undefined, at: Date) {
-  const timestamp = Date.parse(dynamic?.horodatage ?? "");
-  const cutoff = at.getTime() - ACTIVE_STATION_MAX_STATUS_AGE_DAYS * DAY_IN_MS;
+  return isDynamicStatusWithinAge(dynamic, at, ACTIVE_STATION_MAX_STATUS_AGE_DAYS * DAY_IN_MS);
+}
 
-  return Number.isFinite(timestamp) && timestamp > cutoff;
+export function isFreshDynamicStatus(dynamic: QualichargeEVSEDynamic | undefined, at: Date) {
+  return isDynamicStatusWithinAge(
+    dynamic,
+    at,
+    DYNAMIC_STATUS_FRESHNESS_MAX_AGE_HOURS * HOUR_IN_MS
+  );
 }
 
 export function getRecentDynamicStatus(pdc: QualichargeEVSEPdc, at: Date) {
@@ -46,6 +65,7 @@ export function summarizeRecentDynamicPdcs(pdcs: QualichargeEVSEPdc[], at: Date)
 
   return {
     pdcsWithDynamicCount: pdcsWithDynamic.length,
+    freshDynamicCount: pdcsWithDynamic.filter((pdc) => isFreshDynamicStatus(pdc.dynamic, at)).length,
     enServiceCount: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.etat_pdc === EtatPDCEnum.EN_SERVICE).length,
     libreCount: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.LIBRE).length,
     occupiedCount: pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.OCCUPE).length,

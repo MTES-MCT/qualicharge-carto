@@ -8,7 +8,6 @@ import {
   formatDateTime,
   formatRelativeDateTime,
   getAccessSeverity,
-  getAvailabilityTone,
   getPmrLabel,
   getPowerSeverity,
   getStationDynamicSummary,
@@ -105,9 +104,17 @@ export function StationEssentialTab({ station, copiedKey, copy }: EssentialTabPr
 
             <div>
               <p className="irve-sidepanel__label">Fiabilité de la donnée</p>
-              <Badge noIcon severity={getAvailabilityTone(dynamicSummary.latestDynamic?.etat_pdc)}>
+              <Badge
+                noIcon
+                severity={
+                  dynamicSummary.pdcsWithDynamicCount > 0 &&
+                  dynamicSummary.freshDynamicCount === dynamicSummary.pdcsWithDynamicCount
+                    ? "success"
+                    : "warning"
+                }
+              >
                 {dynamicSummary.pdcsWithDynamicCount > 0
-                  ? `${dynamicSummary.pdcsWithDynamicCount}/${station.pdcs.length} PDC avec données dynamiques récentes`
+                  ? `${dynamicSummary.freshDynamicCount}/${dynamicSummary.pdcsWithDynamicCount} PDC actifs avec données dynamiques de moins de 24 h`
                   : "Données dynamiques absentes"}
               </Badge>
               {dynamicSummary.pdcsWithDynamicCount === 0 ? (

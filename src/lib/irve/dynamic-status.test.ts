@@ -28,6 +28,7 @@ describe("summarizeRecentDynamicPdcs", () => {
 
     expect(summary).toMatchObject({
       pdcsWithDynamicCount: 2,
+      freshDynamicCount: 1,
       enServiceCount: 2,
       libreCount: 1,
       occupiedCount: 0,
