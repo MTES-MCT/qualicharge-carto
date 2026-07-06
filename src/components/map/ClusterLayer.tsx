@@ -166,19 +166,21 @@ function getPointIcon(
   const secondaryStyle = secondaryTextColor ? `color:${secondaryTextColor}` : "";
 
   const icon = L.divIcon({
-    html: `<div class="irve-point-card${isSelected ? " is-selected" : ""}">
-      <div class="irve-point-card__primary"${primaryStyle ? ` style="${primaryStyle}"` : ""}>
-        ${primaryLabel}
+    html: `<div class="irve-point-anchor">
+      <div class="irve-point-card${isSelected ? " is-selected" : ""}">
+        <div class="irve-point-card__primary"${primaryStyle ? ` style="${primaryStyle}"` : ""}>
+          ${primaryLabel}
+        </div>
+        <div class="irve-point-card__secondary"${secondaryStyle ? ` style="${secondaryStyle}"` : ""}>
+          ${secondaryLabel}
+        </div>
+        ${debug ? `<div>${debug}</div>`:``}
+        <div class="irve-point-card__tip"></div>
       </div>
-      <div class="irve-point-card__secondary"${secondaryStyle ? ` style="${secondaryStyle}"` : ""}>
-        ${secondaryLabel}
-      </div>
-      ${debug ? `<div>${debug}</div>`:``}
-      <div class="irve-point-card__tip"></div>
     </div>`,
     className: "",
-    iconSize: [84, 56],
-    iconAnchor: [42, 56],
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
     popupAnchor: [0, -50],
   });
 
