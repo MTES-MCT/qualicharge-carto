@@ -224,6 +224,29 @@ export function getConnectorStateSeverity(value?: EtatPriseEnum | null) {
   }
 }
 
+export function getDisplayedConnectorState(
+  connectorStatus?: EtatPriseEnum | null,
+  pdcStatus?: EtatPDCEnum | null
+) {
+  if (connectorStatus != null) {
+    return {
+      label: getEtatPriseLabel(connectorStatus),
+      severity: getConnectorStateSeverity(connectorStatus),
+    };
+  }
+
+  switch (pdcStatus) {
+    case EtatPDCEnum.EN_SERVICE:
+      return { label: "PDC en service", severity: "success" as const };
+    case EtatPDCEnum.HORS_SERVICE:
+      return { label: "PDC hors service", severity: "error" as const };
+    case EtatPDCEnum.INCONNU:
+      return { label: "État du PDC inconnu", severity: "warning" as const };
+    default:
+      return { label: "Donnée dynamique manquante", severity: "new" as const };
+  }
+}
+
 export function getConnectorTags(station: QualichargeEVSEConsolidated) {
   return [
     station.summary.has_prise_type_2 && "Type 2",

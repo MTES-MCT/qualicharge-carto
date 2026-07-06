@@ -5,6 +5,7 @@ import { getRecentDynamicStatus } from "@/lib/irve/dynamic-status";
 import type { DetailSection, DetailItem } from "@/lib/irve/sections";
 import {
   EtatPriseEnum,
+  type EtatPDCEnum,
   type OccupationPDCEnum,
   type ImplantationStation,
   type QualichargeEVSEConsolidated,
@@ -50,6 +51,7 @@ export type ConnectorStatusItem = {
   pdcs: Array<{
     id: string;
     connectorStatus?: EtatPriseEnum | null;
+    pdcStatus?: EtatPDCEnum | null;
     occupationStatus?: OccupationPDCEnum | null;
   }>;
   connectorStatuses: Array<EtatPriseEnum | null | undefined>;
@@ -155,6 +157,7 @@ export function getConnectorStatusItems(station: QualichargeEVSEConsolidated): C
           pdcs: groupedPdcs.map((pdc) => ({
             id: pdc.id_pdc_itinerance,
             connectorStatus: config.getConnectorStatus(pdc),
+            pdcStatus: pdc.dynamic?.etat_pdc,
             occupationStatus: pdc.dynamic?.occupation_pdc,
           })),
           connectorStatuses: groupedPdcs.map((pdc) => config.getConnectorStatus(pdc)),
