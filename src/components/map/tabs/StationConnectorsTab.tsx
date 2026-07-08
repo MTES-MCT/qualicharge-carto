@@ -6,8 +6,7 @@ import { Accordion } from "@codegouvfr/react-dsfr/Accordion";
 import { Badge } from "@codegouvfr/react-dsfr/Badge";
 
 import {
-  getConnectorStateSeverity,
-  getEtatPriseLabel,
+  getDisplayedConnectorState,
   getOccupationLabel,
   getOccupationSeverity,
 } from "@/lib/irve/formatters";
@@ -67,7 +66,7 @@ function ConnectorAccordion({
             </div>
           </div>
 
-          <Badge severity={availableCount > 0 ? "success" : "warning"} small>
+          <Badge noIcon severity={availableCount > 0 ? "success" : "warning"} small>
             {availableCount} / {totalCount} PDC libres
           </Badge>
         </div>
@@ -87,28 +86,32 @@ function ConnectorAccordion({
       >
         <div ref={contentRef} className="space-y-4 pb-4">
           <div className="space-y-2">
-            {pdcs.map((pdc, index) => (
-              <div
-                key={`${label}-${pdc.id}`}
-                className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white py-3"
-              >
-                <div className="min-w-0 flex items-center gap-3">
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-(--border-default-grey) bg-(--background-alt-grey) text-lg font-medium text-(--text-title-grey)">
-                    {index + 1}
-                  </div>
-                  <p className="m-0! text-xs! break-all text-(--text-mention-grey)">{pdc.id}</p>
-                </div>
+            {pdcs.map((pdc, index) => {
+              const displayedState = getDisplayedConnectorState(pdc.connectorStatus, pdc.pdcStatus);
 
-                <div className="flex flex-wrap items-center justify-end gap-2">
-                  <Badge small severity={getConnectorStateSeverity(pdc.connectorStatus)}>
-                    {getEtatPriseLabel(pdc.connectorStatus)}
-                  </Badge>
-                  <Badge small severity={getOccupationSeverity(pdc.occupationStatus ?? undefined)}>
-                    {getOccupationLabel(pdc.occupationStatus)}
-                  </Badge>
+              return (
+                <div
+                  key={`${label}-${pdc.id}`}
+                  className="flex flex-wrap items-center justify-between gap-3 rounded-xl bg-white py-3"
+                >
+                  <div className="min-w-0 flex items-center gap-3">
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-(--border-default-grey) bg-(--background-alt-grey) text-lg font-medium text-(--text-title-grey)">
+                      {index + 1}
+                    </div>
+                    <p className="m-0! text-xs! break-all text-(--text-mention-grey)">{pdc.id}</p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    <Badge noIcon small severity={displayedState.severity}>
+                      {displayedState.label}
+                    </Badge>
+                    <Badge noIcon small severity={getOccupationSeverity(pdc.occupationStatus ?? undefined)}>
+                      {getOccupationLabel(pdc.occupationStatus)}
+                    </Badge>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           {!connectorStatuses.some((status) => status != null) ? (

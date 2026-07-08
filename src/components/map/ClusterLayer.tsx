@@ -9,9 +9,11 @@ import type SuperclusterType from "supercluster";
 import type { IRVEClusterOrPoint, IRVEMapStation, IRVEPointProperties } from "@/types/irve-runtime";
 import { isClusterFeature } from "@/hooks/useMapClusters";
 import type { MarkerDisplayMode } from "@/lib/irve/mapModes";
+import { getStationRecencyRanks } from "@/lib/irve/markerOrder";
 
 const clusterIconCache = new Map<number, L.DivIcon>();
 const pointIconCache = new Map<string, DivIcon>();
+const MARKER_Z_INDEX_STEP = 1_000;
 interface MarkerVisualContent {
   primaryLabel: string;
   secondaryLabel: string;
@@ -114,7 +116,10 @@ const markerContentBuilders: Record<MarkerDisplayMode, MarkerContentBuilder> = {
 
     return {
       primaryLabel: getPointPowerLabel(station.summary.max_power),
-      secondaryLabel: getPointPlugsLabel(station.dynamic_summary.available_count, station.pdc_count),
+      secondaryLabel: getPointPlugsLabel(
+        station.dynamic_summary.available_count,
+        station.dynamic_summary.pdcs_with_dynamic_count
+      ),
       toneColor: tone.bg,
       primaryTextColor: tone.text,
       secondaryTextColor: "#334155",
@@ -161,19 +166,21 @@ function getPointIcon(
   const secondaryStyle = secondaryTextColor ? `color:${secondaryTextColor}` : "";
 
   const icon = L.divIcon({
-    html: `<div class="irve-point-card${isSelected ? " is-selected" : ""}">
-      <div class="irve-point-card__primary"${primaryStyle ? ` style="${primaryStyle}"` : ""}>
-        ${primaryLabel}
+    html: `<div class="irve-point-anchor">
+      <div class="irve-point-card${isSelected ? " is-selected" : ""}">
+        <div class="irve-point-card__primary"${primaryStyle ? ` style="${primaryStyle}"` : ""}>
+          ${primaryLabel}
+        </div>
+        <div class="irve-point-card__secondary"${secondaryStyle ? ` style="${secondaryStyle}"` : ""}>
+          ${secondaryLabel}
+        </div>
+        ${debug ? `<div>${debug}</div>`:``}
+        <div class="irve-point-card__tip"></div>
       </div>
-      <div class="irve-point-card__secondary"${secondaryStyle ? ` style="${secondaryStyle}"` : ""}>
-        ${secondaryLabel}
-      </div>
-      ${debug ? `<div>${debug}</div>`:``}
-      <div class="irve-point-card__tip"></div>
     </div>`,
     className: "",
-    iconSize: [84, 56],
-    iconAnchor: [42, 56],
+    iconSize: [0, 0],
+    iconAnchor: [0, 0],
     popupAnchor: [0, -50],
   });
 
@@ -200,6 +207,12 @@ export function ClusterLayer({
   const getMarkerContent = markerContentBuilders[displayMode];
 
   const elements = useMemo(() => {
+    const pointStations = clusters.flatMap((feature) =>
+      isClusterFeature(feature) ? [] : [feature.properties.row]
+    );
+    const recencyRanks = getStationRecencyRanks(pointStations);
+    const selectedMarkerZIndex = (pointStations.length + 1) * MARKER_Z_INDEX_STEP;
+
     return clusters.map((feature) => {
       const [lng, lat] = feature.geometry.coordinates;
 
@@ -237,6 +250,7 @@ export function ClusterLayer({
       const p = feature.properties.row;
       const isSelected = p.station_key === selectedStationId;
       const markerContent = getMarkerContent(p);
+      const recencyZIndex = (recencyRanks.get(p.station_key) ?? 0) * MARKER_Z_INDEX_STEP;
 
       return (
         <Marker
@@ -250,7 +264,7 @@ export function ClusterLayer({
             markerContent.primaryTextColor,
             markerContent.secondaryTextColor,
           )}
-          zIndexOffset={isSelected ? 2000 : 0}
+          zIndexOffset={isSelected ? selectedMarkerZIndex : recencyZIndex}
           eventHandlers={{
             click: () => {
               const panelWidth = window.innerWidth >= 768 ? Math.min(608, window.innerWidth) : 0;

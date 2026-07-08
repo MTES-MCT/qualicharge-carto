@@ -69,7 +69,7 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
                 ) : null}
                 {tariff.id === markerTariff?.id ? (
                   <div>
-                    <Badge severity="success">Applicable à cette date</Badge>
+                    <Badge noIcon severity="success">Applicable à cette date</Badge>
                   </div>
                 ) : null}
 

@@ -435,7 +435,8 @@ body {
 }
 
 .irve-point-card.is-selected {
-  transform: translateY(-4px) scale(1.08);
+  transform: scale(1.08);
+  transform-origin: 50% calc(100% + var(--irve-point-tip-height));
 }
 
 .irve-point-card.is-selected::after {
@@ -449,7 +450,18 @@ body {
 
 
 .irve-point-card.is-selected .irve-point-card__tip {
-  background: #000091;
+  border-top-color: #000091;
+}
+
+.irve-point-anchor {
+  --irve-point-tip-height: 12px;
+  --irve-point-tip-overlap: 2px;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: max-content;
+  padding-bottom: var(--irve-point-tip-height);
+  transform: translate(-50%, -100%);
 }
 
 .irve-point-card {
@@ -497,12 +509,14 @@ body {
 .irve-point-card__tip {
   position: absolute;
   left: 50%;
-  bottom: -8px;
+  top: calc(100% - var(--irve-point-tip-overlap));
   z-index: 1;
-  width: 18px;
-  height: 18px;
-  background: #ffffff;
-  transform: translateX(-50%) rotate(45deg);
+  width: 0;
+  height: 0;
+  border-right: 9px solid transparent;
+  border-left: 9px solid transparent;
+  border-top: calc(var(--irve-point-tip-height) + var(--irve-point-tip-overlap)) solid #ffffff;
+  transform: translateX(-50%);
 }
 
 /* ─── Popups ───────────────────────────────────────────── */

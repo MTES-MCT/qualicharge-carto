@@ -26,11 +26,11 @@ export function StationAccessTab({ station, paymentTags }: AccessTabProps) {
             <div>
               <p className="irve-sidepanel__label">Accès utilisateur</p>
               <div className="irve-sidepanel__tags irve-sidepanel__tags--compact">
-                <Badge severity={getAccessSeverity(station.condition_acces)}>{station.condition_acces}</Badge>
-                <Badge severity={station.reservation ? "info" : "new"}>
+                <Badge noIcon severity={getAccessSeverity(station.condition_acces)}>{station.condition_acces}</Badge>
+                <Badge noIcon severity={station.reservation ? "info" : "new"}>
                   {station.reservation ? "Réservation disponible" : "Sans réservation"}
                 </Badge>
-                <Badge severity={station.gratuit === true ? "success" : station.gratuit === false ? "info" : "new"}>
+                <Badge noIcon severity={station.gratuit === true ? "success" : station.gratuit === false ? "info" : "new"}>
                   {station.gratuit === true
                     ? "Recharge gratuite"
                     : station.gratuit === false

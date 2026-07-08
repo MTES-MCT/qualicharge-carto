@@ -1,9 +1,11 @@
 import type { Dispatch, SetStateAction } from "react";
 
 import { withBasePath } from "@/lib/base-path";
+import { getRecentDynamicStatus } from "@/lib/irve/dynamic-status";
 import type { DetailSection, DetailItem } from "@/lib/irve/sections";
 import {
   EtatPriseEnum,
+  type EtatPDCEnum,
   type OccupationPDCEnum,
   type ImplantationStation,
   type QualichargeEVSEConsolidated,
@@ -49,6 +51,7 @@ export type ConnectorStatusItem = {
   pdcs: Array<{
     id: string;
     connectorStatus?: EtatPriseEnum | null;
+    pdcStatus?: EtatPDCEnum | null;
     occupationStatus?: OccupationPDCEnum | null;
   }>;
   connectorStatuses: Array<EtatPriseEnum | null | undefined>;
@@ -107,13 +110,18 @@ export function resolveDisplayValue(item: DetailItem): string {
 }
 
 export function getConnectorStatusItems(station: QualichargeEVSEConsolidated): ConnectorStatusItem[] {
+  const at = new Date();
+
   function buildConnectorStatusItem(config: {
     label: string;
     iconPath: string;
     predicate: (pdc: QualichargeEVSEPdc) => boolean;
     getConnectorStatus: (pdc: QualichargeEVSEPdc) => EtatPriseEnum | null | undefined;
   }): ConnectorStatusItem[] {
-    const matchingPdcs = station.pdcs.filter(config.predicate);
+    const matchingPdcs = station.pdcs.filter(config.predicate).map((pdc) => ({
+      ...pdc,
+      dynamic: getRecentDynamicStatus(pdc, at),
+    }));
 
     if (matchingPdcs.length === 0) {
       return [];
@@ -149,6 +157,7 @@ export function getConnectorStatusItems(station: QualichargeEVSEConsolidated): C
           pdcs: groupedPdcs.map((pdc) => ({
             id: pdc.id_pdc_itinerance,
             connectorStatus: config.getConnectorStatus(pdc),
+            pdcStatus: pdc.dynamic?.etat_pdc,
             occupationStatus: pdc.dynamic?.occupation_pdc,
           })),
           connectorStatuses: groupedPdcs.map((pdc) => config.getConnectorStatus(pdc)),

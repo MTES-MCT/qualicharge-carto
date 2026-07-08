@@ -8,6 +8,7 @@ import {
   type QualichargeEVSEConsolidated,
   type QualichargeEVSEPdc,
 } from "@/types/irve";
+import { getRecentDynamicStatus, summarizeRecentDynamicPdcs } from "@/lib/irve/dynamic-status";
 
 export function formatNullable(value: string | number | null | undefined, fallback = "Non renseigné") {
   if (value == null || value === "") {
@@ -223,6 +224,29 @@ export function getConnectorStateSeverity(value?: EtatPriseEnum | null) {
   }
 }
 
+export function getDisplayedConnectorState(
+  connectorStatus?: EtatPriseEnum | null,
+  pdcStatus?: EtatPDCEnum | null
+) {
+  if (connectorStatus != null) {
+    return {
+      label: getEtatPriseLabel(connectorStatus),
+      severity: getConnectorStateSeverity(connectorStatus),
+    };
+  }
+
+  switch (pdcStatus) {
+    case EtatPDCEnum.EN_SERVICE:
+      return { label: "PDC en service", severity: "success" as const };
+    case EtatPDCEnum.HORS_SERVICE:
+      return { label: "PDC hors service", severity: "error" as const };
+    case EtatPDCEnum.INCONNU:
+      return { label: "État du PDC inconnu", severity: "warning" as const };
+    default:
+      return { label: "Donnée dynamique manquante", severity: "new" as const };
+  }
+}
+
 export function getConnectorTags(station: QualichargeEVSEConsolidated) {
   return [
     station.summary.has_prise_type_2 && "Type 2",
@@ -243,16 +267,17 @@ export function getPaymentTags(station: QualichargeEVSEConsolidated) {
   ].filter(Boolean) as string[];
 }
 
-export function isFunctionalPdc(pdc: QualichargeEVSEPdc) {
-  if (pdc.dynamic?.etat_pdc !== EtatPDCEnum.EN_SERVICE) {
+export function isFunctionalPdc(pdc: QualichargeEVSEPdc, at = new Date()) {
+  const dynamic = getRecentDynamicStatus(pdc, at);
+  if (dynamic?.etat_pdc !== EtatPDCEnum.EN_SERVICE) {
     return false;
   }
 
   const connectorStatuses = [
-    pdc.dynamic.etat_prise_type_2,
-    pdc.dynamic.etat_prise_type_combo_ccs,
-    pdc.dynamic.etat_prise_type_chademo,
-    pdc.dynamic.etat_prise_type_ef,
+    dynamic.etat_prise_type_2,
+    dynamic.etat_prise_type_combo_ccs,
+    dynamic.etat_prise_type_chademo,
+    dynamic.etat_prise_type_ef,
   ];
 
   const declaredStatuses = connectorStatuses.filter((status) => status != null);
@@ -263,47 +288,19 @@ export function isFunctionalPdc(pdc: QualichargeEVSEPdc) {
   return declaredStatuses.some((status) => status === EtatPriseEnum.FONCTIONNEL);
 }
 
-export function isAvailablePdc(pdc: QualichargeEVSEPdc) {
-  if (pdc.dynamic?.occupation_pdc !== OccupationPDCEnum.LIBRE) {
+export function isAvailablePdc(pdc: QualichargeEVSEPdc, at = new Date()) {
+  const dynamic = getRecentDynamicStatus(pdc, at);
+  if (dynamic?.occupation_pdc !== OccupationPDCEnum.LIBRE) {
     return false;
   }
 
-  if (pdc.dynamic?.etat_pdc == null) {
+  if (dynamic.etat_pdc == null) {
     return true;
   }
 
-  return pdc.dynamic.etat_pdc === EtatPDCEnum.EN_SERVICE;
+  return dynamic.etat_pdc === EtatPDCEnum.EN_SERVICE;
 }
 
-export function getStationDynamicSummary(station: QualichargeEVSEConsolidated) {
-  const pdcsWithDynamic = station.pdcs.filter((pdc) => pdc.dynamic);
-  const latestPdc = pdcsWithDynamic.reduce<QualichargeEVSEPdc | null>((latest, pdc) => {
-    if (!pdc.dynamic?.horodatage) {
-      return latest;
-    }
-
-    if (!latest?.dynamic?.horodatage) {
-      return pdc;
-    }
-
-    return new Date(pdc.dynamic.horodatage).getTime() > new Date(latest.dynamic.horodatage).getTime()
-      ? pdc
-      : latest;
-  }, null);
-
-  const enServiceCount = pdcsWithDynamic.filter((pdc) => pdc.dynamic?.etat_pdc === EtatPDCEnum.EN_SERVICE).length;
-  const libreCount = pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.LIBRE).length;
-  const occupiedCount = pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.OCCUPE).length;
-  const reservedCount = pdcsWithDynamic.filter((pdc) => pdc.dynamic?.occupation_pdc === OccupationPDCEnum.RESERVE).length;
-  const availableCount = pdcsWithDynamic.filter(isAvailablePdc).length;
-
-  return {
-    pdcsWithDynamicCount: pdcsWithDynamic.length,
-    enServiceCount,
-    libreCount,
-    occupiedCount,
-    reservedCount,
-    availableCount,
-    latestDynamic: latestPdc?.dynamic,
-  };
+export function getStationDynamicSummary(station: QualichargeEVSEConsolidated, at = new Date()) {
+  return summarizeRecentDynamicPdcs(station.pdcs, at);
 }

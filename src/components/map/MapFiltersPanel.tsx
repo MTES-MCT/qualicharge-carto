@@ -159,7 +159,7 @@ export function MapFiltersPanel({
             </div>
 
             <div className="irve-filters-panel__summary-badges">
-              <Badge severity={activeCount > 0 ? "info" : "new"}>
+              <Badge noIcon severity={activeCount > 0 ? "info" : "new"}>
                 {activeCount} filtre{activeCount > 1 ? "s" : ""} actif{activeCount > 1 ? "s" : ""}
               </Badge>
               <Button

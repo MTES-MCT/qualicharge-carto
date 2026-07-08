@@ -61,7 +61,7 @@ export function MapAnalysisPanel({
                 ? "Une heatmap colore les zones selon l'intensité de l'indicateur choisi."
                 : activeMode.description}
             </span>
-            <Badge severity={activeMode.kind === "heatmap" ? "info" : "new"}>
+            <Badge noIcon severity={activeMode.kind === "heatmap" ? "info" : "new"}>
               {activeMode.kind === "heatmap" ? "Heatmap" : isPricingMode ? "Tarifs" : "Stations"}
             </Badge>
           </div>

@@ -212,7 +212,7 @@ export default function IRVEMap() {
               Filtres
             </Button>
             {activeFilterCount > 0 && (
-              <Badge severity="info">
+              <Badge noIcon severity="info">
                 {activeFilterCount} filtre{activeFilterCount > 1 ? "s" : ""}
               </Badge>
             )}

@@ -7,6 +7,8 @@ export const DEFAULT_TARIFFS_PARQUET_URL = "http://localhost:8020/d/tariffs.parq
 
 export const ROW_BATCH_SIZE = 20_000;
 export const MIN_DISPLAYED_POWER_KW = 50;
+export const ACTIVE_STATION_MAX_STATUS_AGE_DAYS = 30;
+export const DYNAMIC_STATUS_FRESHNESS_MAX_AGE_HOURS = 24;
 export const cacheOptions: RequestInit = { cache: "no-store" };
 
 export type TariffSourceMode = "local-files" | "consolidated";
