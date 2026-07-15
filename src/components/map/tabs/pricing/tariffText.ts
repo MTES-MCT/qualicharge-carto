@@ -1,5 +1,5 @@
 import type { TariffComponentLine } from "@/lib/irve/tariffs";
-import type { QualichargeTariff } from "@/types/irve";
+import type { QualichargeEVSEPdc, QualichargeTariff } from "@/types/irve";
 import type { StationDetailsTabProps } from "../shared";
 
 export type HighlightedTextPart =
@@ -9,6 +9,16 @@ export type HighlightedTextPart =
 export interface TariffLineViewModel {
   amount: string;
   restrictions: string[];
+}
+
+export interface ApplicableTariffPdc {
+  id: QualichargeEVSEPdc["id_pdc_itinerance"];
+  power: QualichargeEVSEPdc["puissance_nominale"];
+}
+
+export interface ApplicableTariffEntry {
+  tariff: QualichargeTariff;
+  pdcs: ApplicableTariffPdc[];
 }
 
 export function formatTariffDateTime(value: string | null | undefined) {
@@ -54,17 +64,49 @@ export function getTaxIncludedLabel(value: string | null | undefined) {
 }
 
 export function getUniqueApplicableTariffEntries(station: StationDetailsTabProps["station"]) {
-  const tariffs = new Map<string, QualichargeTariff>();
+  const entries = new Map<string, ApplicableTariffEntry>();
 
   for (const pdc of station.pdcs) {
     if (!pdc.applicable_tariff) {
       continue;
     }
 
-    tariffs.set(pdc.applicable_tariff.id, pdc.applicable_tariff);
+    const tariffId = pdc.applicable_tariff.id;
+    const entry = entries.get(tariffId) ?? {
+      tariff: pdc.applicable_tariff,
+      pdcs: [],
+    };
+
+    entry.pdcs.push({
+      id: pdc.id_pdc_itinerance,
+      power: pdc.puissance_nominale,
+    });
+    entries.set(tariffId, entry);
   }
 
-  return Array.from(tariffs.values()).map((tariff) => ({ tariff }));
+  return Array.from(entries.values());
+}
+
+export function formatPdcPower(power: number) {
+  return `${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(power)} kW`;
+}
+
+export function getTariffCardTitle(entry: ApplicableTariffEntry, tariffCount: number) {
+  if (tariffCount < 2 && entry.pdcs.length < 2) {
+    return "Tarif";
+  }
+
+  const powers = Array.from(new Set(entry.pdcs.map((pdc) => pdc.power)));
+
+  if (powers.length === 1) {
+    return `Tarif ${formatPdcPower(powers[0])}`;
+  }
+
+  return `Tarif pour ${entry.pdcs.length} points de charge`;
+}
+
+export function shouldShowTariffPdcScope(entry: ApplicableTariffEntry, tariffCount: number) {
+  return tariffCount > 1 || entry.pdcs.length > 1;
 }
 
 export function getTariffDisplayId(tariff: QualichargeTariff) {
@@ -124,7 +166,7 @@ export function getTariffLineViewModel(line: TariffComponentLine, hasSeveralLine
   };
 }
 
-export function sortTariffEntries(entries: Array<{ tariff: QualichargeTariff }>, bestTariff: QualichargeTariff | null) {
+export function sortTariffEntries<T extends { tariff: QualichargeTariff }>(entries: T[], bestTariff: QualichargeTariff | null) {
   return [...entries].sort((left, right) => {
     if (left.tariff.id === bestTariff?.id) return -1;
     if (right.tariff.id === bestTariff?.id) return 1;
