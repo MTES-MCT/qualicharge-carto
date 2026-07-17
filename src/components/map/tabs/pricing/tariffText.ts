@@ -102,7 +102,7 @@ export function getTariffCardTitle(entry: ApplicableTariffEntry, tariffCount: nu
     return `Tarif ${formatPdcPower(powers[0])}`;
   }
 
-  return `Tarif pour ${entry.pdcs.length} points de charge`;
+  return "Tarif";
 }
 
 export function shouldShowTariffPdcScope(entry: ApplicableTariffEntry, tariffCount: number) {

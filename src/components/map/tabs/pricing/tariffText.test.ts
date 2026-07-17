@@ -75,7 +75,7 @@ describe("station tariff context", () => {
       pdc("FRLDLE00004404", 120, sharedTariff),
     ]));
 
-    expect(getTariffCardTitle(entries[0], entries.length)).toBe("Tarif pour 2 points de charge");
+    expect(getTariffCardTitle(entries[0], entries.length)).toBe("Tarif");
     expect(entries[0].pdcs).toEqual([
       { id: "FRLDLE00004403", power: 300 },
       { id: "FRLDLE00004404", power: 120 },
