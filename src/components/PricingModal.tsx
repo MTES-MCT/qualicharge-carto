@@ -2,6 +2,8 @@
 
 import { createModal } from "@codegouvfr/react-dsfr/Modal";
 
+import { dismissModal, MODAL_DISMISSAL_KEYS } from "@/lib/modal-preferences";
+
 export const pricingModal = createModal({
   id: "pricing-modal",
   isOpenedByDefault: false,
@@ -14,8 +16,12 @@ export function PricingModal() {
       iconId="fr-icon-money-euro-circle-line"
       buttons={[
         {
+          priority: "secondary",
+          onClick: () => dismissModal(MODAL_DISMISSAL_KEYS.pricing),
+          children: "Ne plus afficher",
+        },
+        {
           iconId: "ri-check-line",
-          onClick: () => console.log("pricing modal acknowledged"),
           children: "Ok",
         },
       ]}

@@ -18,6 +18,7 @@ import {
   isHeatmapDisplayMode,
   type MapDisplayMode,
 } from "@/lib/irve/mapModes";
+import { isModalDismissed, MODAL_DISMISSAL_KEYS } from "@/lib/modal-preferences";
 import type { IRVEMapStation } from "@/types/irve-runtime";
 import { matchesStationFilters } from "@/lib/irve/mapFilters";
 import { LoadingOverlay } from "./LoadingOverlay";
@@ -167,7 +168,9 @@ export default function IRVEMap() {
                   checked: mapDisplayMode === "pricing",
                   onChange: () => {
                     setMapDisplayMode("pricing");
-                    pricingModal.open();
+                    if (!isModalDismissed(MODAL_DISMISSAL_KEYS.pricing)) {
+                      pricingModal.open();
+                    }
                   },
                 },
               },

@@ -12,10 +12,13 @@ import {
 import type { IRVEMapStationSummary } from "@/types/irve-runtime";
 import type { StationDetailsTabProps } from "./shared";
 import {
+  formatPdcPower,
   getHighlightedTariffTextParts,
+  getTariffCardTitle,
   getTariffLineViewModel,
   getTariffValidityText,
   getUniqueApplicableTariffEntries,
+  shouldShowTariffPdcScope,
   sortTariffEntries,
 } from "./pricing/tariffText";
 
@@ -49,18 +52,20 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
         <Notice
           severity="info"
           title="Tarif inconnu"
-          description="La tarif applicable à cette station n'a pas été transmis par son opérateur."
+          description="Le tarif applicable à cette station n'a pas été transmis par son opérateur."
         />
       ) : null}
 
-      {sortedTariffs.map(({ tariff }) => {
+      {sortedTariffs.map((entry) => {
+        const { tariff, pdcs } = entry;
         const validityText = getTariffValidityText(tariff);
         const dimensionGroups = getTariffDimensionGroups(tariff);
+        const showPdcScope = shouldShowTariffPdcScope(entry, sortedTariffs.length);
 
         return (
           <Card
             key={tariff.id}
-            title={`Tarif`}
+            title={getTariffCardTitle(entry, sortedTariffs.length)}
             // title={`Tarif : "${getTariffDisplayId(tariff)}"${getTariffVersionDate(tariff) ? ` version du ${getTariffVersionDate(tariff)}` : ""}`}
             end={
               <div className="irve-tariff-reader">
@@ -69,7 +74,21 @@ export function StationPricingTab({ station, mapPricingSummary }: StationPricing
                 ) : null}
                 {tariff.id === markerTariff?.id ? (
                   <div>
-                    <Badge noIcon severity="success">Applicable à cette date</Badge>
+                    <Badge noIcon severity="info">Tarif affiché sur la carte</Badge>
+                  </div>
+                ) : null}
+
+                {showPdcScope ? (
+                  <div className="irve-tariff-reader__scope">
+                    <p>{pdcs.length > 1 ? "Points de charge concernés" : "Point de charge concerné"}</p>
+                    <ul>
+                      {pdcs.map((pdc) => (
+                        <li key={pdc.id}>
+                          <span>{pdc.id}</span>
+                          <strong>{formatPdcPower(pdc.power)}</strong>
+                        </li>
+                      ))}
+                    </ul>
                   </div>
                 ) : null}
 
