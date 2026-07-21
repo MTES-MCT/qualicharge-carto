@@ -38,6 +38,21 @@ export type AccessTabProps = StationDetailsTabProps & {
   paymentTags: string[];
 };
 
+export function getChargingPricingStatus(
+  gratuit: boolean | null | undefined,
+  applicableTariffCount: number
+) {
+  if (gratuit === true) {
+    return { label: "Recharge gratuite", severity: "success" as const };
+  }
+
+  if (gratuit === false || applicableTariffCount > 0) {
+    return { label: "Recharge payante", severity: "info" as const };
+  }
+
+  return { label: "Tarification non renseignée", severity: "new" as const };
+}
+
 export type DetailsTabProps = StationDetailsTabProps & CopyState & {
   sections: DetailSection[];
 };

@@ -3,9 +3,11 @@ import { Card } from "@codegouvfr/react-dsfr/Card";
 import { Tag } from "@codegouvfr/react-dsfr/Tag";
 
 import { getAccessSeverity } from "@/lib/irve/formatters";
-import type { AccessTabProps } from "./shared";
+import { getChargingPricingStatus, type AccessTabProps } from "./shared";
 
 export function StationAccessTab({ station, paymentTags }: AccessTabProps) {
+  const pricingStatus = getChargingPricingStatus(station.gratuit, station.summary.applicable_tariff_count);
+
   return (
     <div className="irve-sidepanel__tab-stack">
       <Card
@@ -30,12 +32,8 @@ export function StationAccessTab({ station, paymentTags }: AccessTabProps) {
                 <Badge noIcon severity={station.reservation ? "info" : "new"}>
                   {station.reservation ? "Réservation disponible" : "Sans réservation"}
                 </Badge>
-                <Badge noIcon severity={station.gratuit === true ? "success" : station.gratuit === false ? "info" : "new"}>
-                  {station.gratuit === true
-                    ? "Recharge gratuite"
-                    : station.gratuit === false
-                      ? "Recharge payante"
-                      : "Tarification non renseignée"}
+                <Badge noIcon severity={pricingStatus.severity}>
+                  {pricingStatus.label}
                 </Badge>
               </div>
             </div>
