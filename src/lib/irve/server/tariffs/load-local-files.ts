@@ -61,20 +61,19 @@ async function discoverLocalTariffProviderFiles(rootDir: string): Promise<LocalT
   return validProviders;
 }
 
-function indexTariffs(provider: string, rows: LocalTariffParquetRow[], rowIndexBase: number) {
+function indexTariffs(provider: string, rows: LocalTariffParquetRow[]) {
   const tariffs: IndexedTariff[] = [];
   const tariffsByReference = new Map<string, IndexedTariff[]>();
 
-  rows.forEach((row, rowIndex) => {
+  rows.forEach((row) => {
     const originalId = toRequiredString(row.original_id);
     if (!originalId) {
       return;
     }
 
     const originalLastUpdated = toIsoString(row.original_last_updated);
-    const indexedRow = rowIndexBase + rowIndex;
     const tariff: IndexedTariff = {
-      id: `${provider}::${originalId}::${originalLastUpdated ?? "unknown"}::${rowIndex}`,
+      id: `${provider}::${originalId}::${originalLastUpdated ?? "unknown"}`,
       original_id: originalId,
       original_last_updated: originalLastUpdated,
       raw: stringifyTariffRaw(row.raw),
@@ -82,7 +81,6 @@ function indexTariffs(provider: string, rows: LocalTariffParquetRow[], rowIndexB
       start: toIsoString(row.start),
       end: toIsoString(row.end),
       id_pdc_itinerance: [],
-      rowIndex: indexedRow,
     };
 
     tariffs.push(tariff);
@@ -110,12 +108,12 @@ function attachPdcReferences(rows: LocalTariffPdcParquetRow[], tariffsByReferenc
   }
 }
 
-async function loadProviderTariffs(files: LocalTariffProviderFiles, rowIndexBase: number) {
+async function loadProviderTariffs(files: LocalTariffProviderFiles) {
   const [tariffRows, tariffPdcRows] = await Promise.all([
     readLocalParquetRows<LocalTariffParquetRow>(files.tariffPath),
     readLocalParquetRows<LocalTariffPdcParquetRow>(files.tariffPdcPath),
   ]);
-  const { tariffs, tariffsByReference } = indexTariffs(files.provider, tariffRows, rowIndexBase);
+  const { tariffs, tariffsByReference } = indexTariffs(files.provider, tariffRows);
 
   attachPdcReferences(tariffPdcRows, tariffsByReference);
 
@@ -125,12 +123,10 @@ async function loadProviderTariffs(files: LocalTariffProviderFiles, rowIndexBase
 export async function loadLocalTariffFiles(rootDir: string) {
   const providerFiles = await discoverLocalTariffProviderFiles(rootDir);
   const providerTariffs: IndexedTariff[][] = [];
-  let rowIndexBase = 0;
 
   for (const files of providerFiles) {
-    const tariffs = await loadProviderTariffs(files, rowIndexBase);
+    const tariffs = await loadProviderTariffs(files);
     providerTariffs.push(tariffs);
-    rowIndexBase += tariffs.length;
   }
 
   return providerTariffs.flat();

@@ -27,11 +27,14 @@ function compareApplicableTariffs(left: IndexedTariff, right: IndexedTariff) {
 }
 
 function compareLastUpdatedTariffs(left: IndexedTariff, right: IndexedTariff) {
-  const leftUpdated = left.original_last_updated ? new Date(left.original_last_updated).getTime() : 0;
-  const rightUpdated = right.original_last_updated ? new Date(right.original_last_updated).getTime() : 0;
+  const leftLastUpdated = left.parsed?.last_updated ?? left.original_last_updated;
+  const rightLastUpdated = right.parsed?.last_updated ?? right.original_last_updated;
+  const leftUpdated = leftLastUpdated ? new Date(leftLastUpdated).getTime() : 0;
+  const rightUpdated = rightLastUpdated ? new Date(rightLastUpdated).getTime() : 0;
   if (leftUpdated !== rightUpdated) return leftUpdated - rightUpdated;
 
-  return left.rowIndex - right.rowIndex;
+  const idComparison = left.id.localeCompare(right.id);
+  return idComparison !== 0 ? idComparison : left.raw.localeCompare(right.raw);
 }
 
 export function selectApplicableTariffs(tariffs: IndexedTariff[], at: Date): ApplicableTariffsByPdc {
