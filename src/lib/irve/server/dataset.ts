@@ -1,12 +1,11 @@
 import "server-only";
 
-import { MIN_DISPLAYED_POWER_KW, ROW_BATCH_SIZE } from "./config";
-import { getStaticParquetUrl } from "./data-gouv";
-import { getParquetRowCount, readParquetRowBatch, readRemoteParquetBuffer } from "./parquet";
+import { MIN_DISPLAYED_POWER_KW } from "./config";
+import { getIRVESourceLoader } from "./sources";
 import { hasRecentDynamicStatus } from "./stations/activity";
 import { consolidateStation, createMapStation, getDynamicSummary, getStationKey } from "./stations/consolidate";
 import { getDynamicKey, loadDynamicRows } from "./stations/dynamic-rows";
-import { toStaticRow, type StaticParquetRow } from "./stations/static-row";
+import { toStaticRow } from "./stations/static-row";
 import { loadApplicableTariffsSafely, toPublicTariff } from "./tariffs";
 import type { QualichargeEVSEConsolidated, QualichargeEVSEPdc } from "@/types/irve";
 import type { IRVEMapStation } from "@/types/irve-runtime";
@@ -24,30 +23,24 @@ function addPdcToStation(stationMap: Map<string, QualichargeEVSEPdc[]>, pdc: Qua
 
 export async function loadIRVEDataset() {
   const now = new Date();
+  const sourceLoader = getIRVESourceLoader();
   const [dynamicMap, applicableTariffs] = await Promise.all([
-    loadDynamicRows(),
+    loadDynamicRows(sourceLoader),
     loadApplicableTariffsSafely(now),
   ]);
-  const staticFile = await readRemoteParquetBuffer(await getStaticParquetUrl());
-  const rowCount = await getParquetRowCount(staticFile);
   const stationMap = new Map<string, QualichargeEVSEPdc[]>();
 
-  for (let rowStart = 0; rowStart < rowCount; rowStart += ROW_BATCH_SIZE) {
-    const rowEnd = Math.min(rowStart + ROW_BATCH_SIZE, rowCount);
-    const rows = await readParquetRowBatch<StaticParquetRow>(staticFile, rowStart, rowEnd);
-
-    for (const row of rows) {
-      const staticRow = toStaticRow(row);
-      if (staticRow.puissance_nominale < MIN_DISPLAYED_POWER_KW) {
-        continue;
-      }
-
-      addPdcToStation(stationMap, {
-        ...staticRow,
-        dynamic: dynamicMap.get(getDynamicKey(staticRow.id_pdc_itinerance)),
-        applicable_tariff: toPublicTariff(applicableTariffs.get(staticRow.id_pdc_itinerance)),
-      });
+  for await (const row of sourceLoader.streamStaticRows()) {
+    const staticRow = toStaticRow(row);
+    if (staticRow.puissance_nominale < MIN_DISPLAYED_POWER_KW) {
+      continue;
     }
+
+    addPdcToStation(stationMap, {
+      ...staticRow,
+      dynamic: dynamicMap.get(getDynamicKey(staticRow.id_pdc_itinerance)),
+      applicable_tariff: toPublicTariff(applicableTariffs.get(staticRow.id_pdc_itinerance)),
+    });
   }
 
   const stations: IRVEMapStation[] = [];

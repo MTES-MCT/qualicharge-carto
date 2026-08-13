@@ -1,17 +1,23 @@
-export const DATA_GOUV_DATASET_SLUG =
-  "infrastructures-de-recharge-pour-vehicules-electriques-donnees-ouvertes";
-export const STATIC_PARQUET_RESOURCE_ID = "8bb0a6e2-1016-42ba-aaee-f72f55c82e9f";
-export const DYNAMIC_PARQUET_RESOURCE_ID = "411443b1-6667-473f-8217-1c57c167408f";
 export const DEFAULT_TARIFF_PARQUET_DIR = "data/tariffs";
 export const DEFAULT_TARIFFS_PARQUET_URL = "http://localhost:8020/d/tariffs.parquet";
+export const DEFAULT_IRVE_DATA_SOURCE = "opendata";
 
-export const ROW_BATCH_SIZE = 20_000;
 export const MIN_DISPLAYED_POWER_KW = 50;
 export const ACTIVE_STATION_MAX_STATUS_AGE_DAYS = 30;
 export const DYNAMIC_STATUS_FRESHNESS_MAX_AGE_HOURS = 24;
 export const cacheOptions: RequestInit = { cache: "no-store" };
 
+export type IRVEDataSource = "datagouv" | "opendata";
 export type TariffSourceMode = "local-files" | "consolidated";
+
+export function getIRVEDataSource(): IRVEDataSource {
+  const source = process.env.IRVE_DATA_SOURCE || DEFAULT_IRVE_DATA_SOURCE;
+  if (source === "datagouv" || source === "opendata") {
+    return source;
+  }
+
+  throw new Error(`Invalid IRVE_DATA_SOURCE "${source}". Expected "opendata" or "datagouv".`);
+}
 
 export function getTariffParquetDir() {
   return process.env.TARIFF_PARQUET_DIR || DEFAULT_TARIFF_PARQUET_DIR;

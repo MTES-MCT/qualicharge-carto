@@ -1,17 +1,13 @@
 import type { QualichargeEVSEDynamic } from "@/types/irve";
 
-import { cacheOptions } from "../config";
 import { toNullableString, toRequiredString } from "../coerce";
-import { parseCsvRecordStream } from "../csv";
-import { getDynamicCsvUrl } from "../data-gouv";
-
-type DynamicCsvRow = Partial<Record<keyof QualichargeEVSEDynamic | "id_station_itinerance", unknown>>;
+import type { DynamicSourceRow, IRVESourceLoader } from "../sources/types";
 
 export function getDynamicKey(idPdcItinerance?: string) {
   return toRequiredString(idPdcItinerance);
 }
 
-function toDynamicRow(row: DynamicCsvRow): QualichargeEVSEDynamic {
+function toDynamicRow(row: DynamicSourceRow): QualichargeEVSEDynamic {
   return {
     id_pdc_itinerance: toRequiredString(row.id_pdc_itinerance),
     horodatage: toRequiredString(row.horodatage),
@@ -24,19 +20,10 @@ function toDynamicRow(row: DynamicCsvRow): QualichargeEVSEDynamic {
   };
 }
 
-export async function loadDynamicRows() {
-  const response = await fetch(await getDynamicCsvUrl(), cacheOptions);
-  if (!response.ok) {
-    throw new Error(`Unable to fetch dynamic IRVE CSV: HTTP ${response.status}`);
-  }
-
-  if (!response.body) {
-    throw new Error("Unable to fetch dynamic IRVE CSV: missing response body");
-  }
-
+export async function loadDynamicRows(sourceLoader: IRVESourceLoader) {
   const dynamicMap = new Map<string, QualichargeEVSEDynamic>();
 
-  for await (const row of parseCsvRecordStream(response.body) as AsyncIterable<DynamicCsvRow>) {
+  for await (const row of sourceLoader.streamDynamicRows()) {
     const dynamicRow = toDynamicRow(row);
     dynamicMap.set(getDynamicKey(dynamicRow.id_pdc_itinerance), dynamicRow);
   }

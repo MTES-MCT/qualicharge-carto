@@ -16,13 +16,24 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-The map data is served by the Next.js API route at `/api/irve/points`. The first request warms an in-memory server cache by fetching and consolidating the static and dynamic Parquet sources; later requests reuse that cached payload while the backend refreshes it periodically. This endpoint returns compact map features only, and full station details are loaded on demand through `/api/irve/stations/[stationKey]`.
+The map data is served by the Next.js API route at `/api/irve/points`. The first request warms an in-memory server cache by fetching and consolidating the configured static and dynamic sources; later requests reuse that cached payload while the backend refreshes it periodically. This endpoint returns compact map features only, and full station details are loaded on demand through `/api/irve/stations/[stationKey]`.
 
 ## Data Environment
 
-The backend accepts these optional environment variables:
+The IRVE static and dynamic source is selected with:
 
-Static IRVE Parquet and dynamic IRVE CSV URLs are resolved from the stable data.gouv.fr resource metadata.
+- `IRVE_DATA_SOURCE`: `opendata` or `datagouv`. Defaults to `opendata`.
+
+When `IRVE_DATA_SOURCE=opendata`, the backend requires:
+
+- `OPENDATA_BASE_URL`: opendata service root URL, without the `/d` dataset path.
+- `OPENDATA_USERNAME`: HTTP Basic authentication username.
+- `OPENDATA_PASSWORD`: HTTP Basic authentication password.
+
+`IRVE_DATA_SOURCE=datagouv` uses the public data.gouv.fr resource metadata and does not require additional credentials.
+
+The backend also accepts these optional environment variables:
+
 - `TARIFF_SOURCE_MODE`: tariff loading strategy. Defaults to `local-files`. Use `consolidated` to load the legacy single parquet URL.
 - `TARIFF_PARQUET_DIR`: local tariff parquet root directory. Defaults to `data/tariffs`.
   Each direct child folder is parsed as one provider and must contain `qualicharge_tariff.parquet` and `qualicharge_tariffpdc.parquet`, for example `data/tariffs/tesla/qualicharge_tariff.parquet`.

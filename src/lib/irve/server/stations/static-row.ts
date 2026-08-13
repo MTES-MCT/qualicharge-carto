@@ -1,5 +1,6 @@
 import type { QualichargeEVSEStatique } from "@/types/irve";
 
+import type { StaticSourceRow } from "../sources/types";
 import {
   toBoolean,
   toInteger,
@@ -9,9 +10,7 @@ import {
   toRequiredString,
 } from "../coerce";
 
-export type StaticParquetRow = Partial<Record<keyof QualichargeEVSEStatique, unknown>>;
-
-export function toStaticRow(row: StaticParquetRow): QualichargeEVSEStatique {
+export function toStaticRow(row: StaticSourceRow): QualichargeEVSEStatique {
   return {
     nom_amenageur: toRequiredString(row.nom_amenageur),
     siren_amenageur: toRequiredString(row.siren_amenageur) as QualichargeEVSEStatique["siren_amenageur"],
